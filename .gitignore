@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Android / Local
+local.properties
+*.apk
+*.aab
+*.dex
+*.class
+*.log
+*.tmp
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Kotlin Multiplatform
+kotlin-js-store/
+*.kotlin_module
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Generated
+shared/build/
+androidApp/build/
+
+# Artifacts (internal agent logs)
+.artifacts/

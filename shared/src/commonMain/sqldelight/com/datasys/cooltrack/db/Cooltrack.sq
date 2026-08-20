@@ -1,0 +1,46 @@
+-- Equivalente a los 5 "boxes" de Hive en lib/services/offline_repository.dart.
+-- Se modela como key-value + una cola, igual de simple que Hive, pero
+-- tipado y con SQL real por debajo (mejor para queries futuras más ricas).
+
+CREATE TABLE CacheEntry (
+    boxName TEXT NOT NULL,
+    entryKey TEXT NOT NULL,
+    jsonValue TEXT NOT NULL,
+    PRIMARY KEY (boxName, entryKey)
+);
+
+getEntry:
+SELECT jsonValue FROM CacheEntry WHERE boxName = ? AND entryKey = ?;
+
+putEntry:
+INSERT OR REPLACE INTO CacheEntry(boxName, entryKey, jsonValue) VALUES (?, ?, ?);
+
+deleteEntry:
+DELETE FROM CacheEntry WHERE boxName = ? AND entryKey = ?;
+
+clearBox:
+DELETE FROM CacheEntry WHERE boxName = ?;
+
+-- Cola de sincronización (equivalente al box 'sync_queue', pero como filas
+-- reales en vez de una lista serializada completa: permite borrar un solo
+-- ítem sin reescribir toda la cola).
+CREATE TABLE SyncQueueItem (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    jsonValue TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+);
+
+insertSyncItem:
+INSERT INTO SyncQueueItem(jsonValue, createdAt) VALUES (?, ?);
+
+getAllSyncItems:
+SELECT * FROM SyncQueueItem ORDER BY id ASC;
+
+deleteSyncItem:
+DELETE FROM SyncQueueItem WHERE id = ?;
+
+clearSyncQueue:
+DELETE FROM SyncQueueItem;
+
+countSyncItems:
+SELECT COUNT(*) FROM SyncQueueItem;
