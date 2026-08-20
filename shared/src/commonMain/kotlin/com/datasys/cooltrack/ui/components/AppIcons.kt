@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ListAlt
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Person
@@ -217,6 +218,7 @@ object AppIcons {
     val Reports: ImageVector = Icons.Filled.BarChart
     val Catalog: ImageVector = Icons.Filled.ListAlt
     val Star: ImageVector = Icons.Filled.Star
+    val Lock: ImageVector = Icons.Filled.Lock
 }
 
 /**

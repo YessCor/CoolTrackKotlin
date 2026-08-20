@@ -18,6 +18,9 @@ import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppStatusBadge
+import com.datasys.cooltrack.ui.components.AppCardSkeleton
+import com.datasys.cooltrack.ui.components.AppEmptyState
+import com.datasys.cooltrack.util.collectAsStateSimple
 import org.koin.compose.koinInject
 
 /**
@@ -30,7 +33,7 @@ class ClientOrdersScreen : Screen {
         val clientRepository: ClientRepository = koinInject()
         val authRepository: AuthRepository = koinInject()
         
-        val user = authRepository.state.collectAsState().value.user
+        val user = authRepository.state.collectAsStateSimple().value.user
         var orders by remember { mutableStateOf<List<ServiceOrder>?>(null) }
         var isLoading by remember { mutableStateOf(true) }
 
@@ -68,7 +71,9 @@ class ClientOrdersScreen : Screen {
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(list) { order ->
-                            AppCard {
+                            AppCard(
+                                onTap = { navigator.push(ClientOrderDetailScreen(order.id)) },
+                            ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),

@@ -22,6 +22,24 @@ class ClientRepository(private val supabase: SupabaseClient) {
             }
             .decodeList()
 
+    /** Obtener detalle de una orden por ID. */
+    suspend fun getOrderDetail(orderId: String): ServiceOrder? = try {
+        supabase.from("service_orders")
+            .select(Columns.ALL) { filter { eq("id", orderId) } }
+            .decodeSingle()
+    } catch (e: Exception) {
+        null
+    }
+
+    /** Calificar una orden completada. */
+    suspend fun rateOrder(orderId: String, rating: Int, feedback: String?) {
+        supabase.from("service_orders")
+            .update(kotlinx.serialization.json.buildJsonObject {
+                put("client_rating", rating)
+                feedback?.let { put("client_feedback", it) }
+            }) { filter { eq("id", orderId) } }
+    }
+
     /** Crear una nueva solicitud de servicio. */
     suspend fun createServiceRequest(
         clientId: String,

@@ -42,12 +42,21 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
+import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.features.admin.AdminShellScreen
 import com.datasys.cooltrack.features.client.ClientShellScreen
 import com.datasys.cooltrack.features.tech.TechnicianShellScreen
+import com.datasys.cooltrack.ui.components.AppButton
+import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppToastHost
+import com.datasys.cooltrack.ui.components.rememberAppToastState
 import com.datasys.cooltrack.util.collectAsStateSimple
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.koin.compose.koinInject
 
 /**
@@ -184,10 +193,110 @@ class LoginScreen : Screen {
     }
 }
 
-/** Placeholder de features/auth/views/forgot_password_screen.dart (módulo siguiente). */
+/** Pantalla de recuperación de contraseña. */
 class ForgotPasswordScreen : Screen {
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
-        Text("Recuperar contraseña — próximo módulo")
+        val navigator = LocalNavigator.currentOrThrow
+        val toastState = rememberAppToastState()
+        val scope = rememberCoroutineScope()
+
+        var email by remember { mutableStateOf("") }
+        var submitted by remember { mutableStateOf(false) }
+        var isLoading by remember { mutableStateOf(false) }
+        var successMessage by remember { mutableStateOf<String?>(null) }
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Recuperar contraseña") },
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.pop() }) {
+                            Icon(AppIcons.ArrowBack, contentDescription = "Volver")
+                        }
+                    },
+                )
+            },
+            snackbarHost = { AppToastHost(toastState) },
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(32.dp))
+                Icon(
+                    imageVector = AppIcons.Lock,
+                    contentDescription = null,
+                    tint = AppColors.Secondary,
+                    modifier = Modifier.height(64.dp),
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "¿Olvidaste tu contraseña?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = AppColors.Primary,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Ingresa tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AppColors.TextSecondary,
+                )
+                Spacer(Modifier.height(32.dp))
+
+                AppInput(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = "Correo electrónico",
+                    prefixIcon = AppIcons.Email,
+                    keyboardType = KeyboardType.Email,
+                    errorText = if (submitted && email.isBlank()) "El correo es requerido" else null,
+                    autofocus = true,
+                )
+                Spacer(Modifier.height(24.dp))
+
+                AppButton(
+                    label = if (isLoading) "Enviando..." else "Enviar instrucciones",
+                    onPressed = {
+                        submitted = true
+                        if (email.isNotBlank()) {
+                            scope.launch {
+                                isLoading = true
+                                try {
+                                    ApiClient.post(
+                                        "/auth/forgot-password",
+                                        buildJsonObject { put("email", email.trim()) }
+                                    )
+                                    successMessage = "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
+                                    toastState.showSuccess("Correo enviado")
+                                } catch (e: Exception) {
+                                    toastState.showError("Error: ${e.message}")
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        }
+                    },
+                    isLoading = isLoading,
+                    isFullWidth = true,
+                )
+
+                if (successMessage != null) {
+                    Spacer(Modifier.height(24.dp))
+                    AppCard {
+                        Text(
+                            text = successMessage!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppColors.Success,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

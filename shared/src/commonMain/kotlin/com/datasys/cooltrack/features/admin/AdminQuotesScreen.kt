@@ -93,7 +93,9 @@ class AdminQuotesScreen : Screen {
                     ) {
                         items(list) { quote ->
                             val statusColor = quoteStatusColor(quote.status)
-                            AppCard {
+                            AppCard(
+                                onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) },
+                            ) {
                                 Row(modifier = Modifier.fillMaxWidth()) {
                                     Box(
                                         modifier = Modifier

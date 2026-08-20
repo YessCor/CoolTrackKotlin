@@ -12,6 +12,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.ui.components.*
+import com.datasys.cooltrack.util.collectAsStateSimple
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -27,7 +28,7 @@ class ClientRequestServiceScreen : Screen {
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
 
-        val user = authRepository.state.collectAsState().value.user
+        val user = authRepository.state.collectAsStateSimple().value.user
         
         var serviceType by remember { mutableStateOf("Mantenimiento") }
         var description by remember { mutableStateOf("") }
@@ -60,29 +61,29 @@ class ClientRequestServiceScreen : Screen {
                 AppInput(
                     value = serviceType,
                     onValueChange = { serviceType = it },
-                    placeholder = "Ej. Mantenimiento, Reparación"
+                    hint = "Ej. Mantenimiento, Reparación"
                 )
 
                 Text("Descripción del problema", style = MaterialTheme.typography.titleSmall)
                 AppInput(
                     value = description,
                     onValueChange = { description = it },
-                    placeholder = "Describe brevemente qué necesitas...",
-                    minLines = 3
+                    hint = "Describe brevemente qué necesitas...",
+                    maxLines = 4
                 )
 
                 Text("Dirección de atención", style = MaterialTheme.typography.titleSmall)
                 AppInput(
                     value = address,
                     onValueChange = { address = it },
-                    placeholder = "Calle, Número, Ciudad"
+                    hint = "Calle, Número, Ciudad"
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 AppButton(
-                    text = if (isSubmitting) "Enviando..." else "Enviar Solicitud",
-                    onClick = {
+                    label = if (isSubmitting) "Enviando..." else "Enviar Solicitud",
+                    onPressed = {
                         if (description.isBlank() || address.isBlank()) {
                             scope.launch { toastState.showError("Por favor completa todos los campos") }
                             return@AppButton
@@ -107,8 +108,8 @@ class ClientRequestServiceScreen : Screen {
                             }
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isSubmitting
+                    isLoading = isSubmitting,
+                    isFullWidth = true
                 )
             }
         }
