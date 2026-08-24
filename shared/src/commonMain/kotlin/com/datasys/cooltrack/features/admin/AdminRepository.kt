@@ -98,7 +98,7 @@ class AdminRepository(private val supabase: SupabaseClient) {
     suspend fun getRecentOrders(limit: Long = 5): List<ServiceOrder> =
         supabase.from("service_orders")
             .select(Columns.ALL) {
-                order("created_at", ascending = false)
+                order("created_at", order = io.github.jan.supabase.postgrest.query.Order.DESCENDING)
                 limit(limit)
             }
             .decodeList()
@@ -137,7 +137,7 @@ class AdminRepository(private val supabase: SupabaseClient) {
     /** Equivalente a serviceCatalogProvider. */
     suspend fun getServiceCatalog(): List<ServiceCatalog> =
         supabase.from("service_catalog")
-            .select(Columns.ALL) { order("name") }
+            .select(Columns.ALL) { order("name", order = io.github.jan.supabase.postgrest.query.Order.ASCENDING) }
             .decodeList()
 
     /** Equivalente a updateServicePriceProvider. */

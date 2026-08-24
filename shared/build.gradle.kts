@@ -12,7 +12,14 @@ plugins {
 kotlin {
     androidTarget {
         compilations.all {
-            kotlinOptions.jvmTarget = "17"
+            kotlinOptions {
+                jvmTarget = "17"
+                freeCompilerArgs += listOf(
+                    "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+                    "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+                    "-opt-in=androidx.compose.foundation.layout.ExperimentalLayoutApi"
+                )
+            }
         }
     }
 
@@ -47,7 +54,7 @@ kotlin {
 
                 // supabase_flutter -> supabase-kt
                 implementation("io.github.jan-tennert.supabase:postgrest-kt:3.0.2")
-                implementation("io.github.jan-tennert.supabase:gotrue-kt:3.0.2")
+                implementation("io.github.jan-tennert.supabase:auth-kt:3.0.2")
                 implementation("io.github.jan-tennert.supabase:realtime-kt:3.0.2")
                 implementation("io.github.jan-tennert.supabase:storage-kt:3.0.2")
 
@@ -90,6 +97,8 @@ kotlin {
                 implementation("app.cash.sqldelight:android-driver:2.0.2")
                 // geolocator -> Google Play Services Location
                 implementation("com.google.android.gms:play-services-location:21.3.0")
+                // EncryptedSharedPreferences
+                implementation("androidx.security:security-crypto:1.1.0")
             }
         }
 

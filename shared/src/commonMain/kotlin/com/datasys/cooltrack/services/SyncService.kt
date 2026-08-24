@@ -3,7 +3,7 @@
 package com.datasys.cooltrack.services
 
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -23,7 +23,7 @@ class TechRepository(private val supabase: SupabaseClient) {
                     // Filtrar para no mostrar las canceladas en la lista principal
                     neq("status", OrderStatus.CANCELLED.value)
                 }
-                order("scheduled_date", ascending = true)
+                order("scheduled_date", order = io.github.jan.supabase.postgrest.query.Order.ASCENDING)
             }
             .decodeList()
 

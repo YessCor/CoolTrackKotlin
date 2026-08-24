@@ -18,7 +18,7 @@ class ClientRepository(private val supabase: SupabaseClient) {
         supabase.from("service_orders")
             .select(Columns.ALL) {
                 filter { eq("client_id", clientId) }
-                order("created_at", ascending = false)
+                order("created_at", order = io.github.jan.supabase.postgrest.query.Order.DESCENDING)
             }
             .decodeList()
 

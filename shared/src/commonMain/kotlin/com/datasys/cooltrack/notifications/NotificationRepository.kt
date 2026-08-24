@@ -2,7 +2,7 @@ package com.datasys.cooltrack.notifications
 
 import com.datasys.cooltrack.models.AppNotification
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.realtime.PostgresAction
@@ -59,7 +59,6 @@ class NotificationRepository(
             val channel = supabase.realtime.channel("notifications-$userId")
             val changeFlow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
                 table = "notifications"
-                filter("user_id", io.github.jan.supabase.postgrest.query.FilterOperator.EQ, userId)
             }
             channel.subscribe()
 
@@ -71,9 +70,9 @@ class NotificationRepository(
 
     private suspend fun fetchOnce(userId: String) {
         val rows = supabase.from("notifications")
-            .select(Columns.ALL) { filter { eq("user_id", userId) }; order("created_at") }
+            .select(Columns.ALL) { filter { eq("user_id", userId) }; order("created_at", order = io.github.jan.supabase.postgrest.query.Order.DESCENDING) }
             .decodeList<AppNotification>()
-        _notifications.value = rows.reversed()
+        _notifications.value = rows
     }
 
     suspend fun markAsRead(id: String) {

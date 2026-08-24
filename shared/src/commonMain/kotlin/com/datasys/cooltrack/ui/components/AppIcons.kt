@@ -49,7 +49,6 @@ import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Assignment
-import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.ChatBubble
@@ -111,8 +110,8 @@ object AppIcons {
     val Technicians: ImageVector = Icons.Outlined.Engineering
     val TechniciansFilled: ImageVector = Icons.Filled.Engineering
 
-    val Orders: ImageVector = Icons.Outlined.Assignment
-    val OrdersFilled: ImageVector = Icons.Filled.Assignment
+    val Orders: ImageVector = Icons.Filled.ListAlt
+    val OrdersFilled: ImageVector = Icons.Filled.ListAlt
 
     val Quotes: ImageVector = Icons.Outlined.ReceiptLong
     val QuotesFilled: ImageVector = Icons.Filled.ReceiptLong
@@ -126,8 +125,8 @@ object AppIcons {
     val Profile: ImageVector = Icons.Outlined.Person
     val ProfileFilled: ImageVector = Icons.Filled.Person
 
-    val Services: ImageVector = Icons.Outlined.Build
-    val ServicesFilled: ImageVector = Icons.Filled.Build
+    val Services: ImageVector = Icons.Outlined.Handyman
+    val ServicesFilled: ImageVector = Icons.Filled.Handyman
 
     val Settings: ImageVector = Icons.Outlined.Settings
     val SettingsFilled: ImageVector = Icons.Filled.Settings
@@ -202,7 +201,7 @@ object AppIcons {
     // para no duplicar imports de material-icons-extended en cada archivo).
     val HourglassEmpty: ImageVector = Icons.Outlined.HourglassEmpty
     val DirectionsCar: ImageVector = Icons.Filled.DirectionsCar
-    val Build: ImageVector = Icons.Filled.Build
+    val Build: ImageVector = Icons.Filled.Construction
     val Cancel: ImageVector = Icons.Filled.Cancel
     val Send: ImageVector = Icons.Filled.Send
     val TimerOff: ImageVector = Icons.Filled.TimerOff

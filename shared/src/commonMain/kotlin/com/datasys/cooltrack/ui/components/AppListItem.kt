@@ -20,7 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextAlign
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,7 +81,7 @@ fun AppListItem(
             }
         }
         if (showDivider) {
-            Divider(
+            androidx.compose.material3.HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 thickness = 1.dp,
                 color = AppColors.SurfaceBorder,

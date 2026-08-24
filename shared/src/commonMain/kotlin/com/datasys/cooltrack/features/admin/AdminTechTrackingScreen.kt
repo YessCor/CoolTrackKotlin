@@ -77,7 +77,7 @@ class AdminTechTrackingScreen : Screen {
 
         suspend fun refetchLocations() {
             val rows = supabase.from("technician_locations")
-                .select(Columns.ALL) { order("recorded_at") }
+                .select(Columns.ALL) { order("recorded_at", order = io.github.jan.supabase.postgrest.query.Order.ASCENDING) }
                 .decodeList<TechnicianLocation>()
             // Igual que `_updateMarkers` en el original: se agrupa por
             // técnico y solo se queda la última ubicación de cada uno

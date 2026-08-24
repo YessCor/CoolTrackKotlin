@@ -18,9 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.foundation.clickable
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -244,10 +242,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     var typeExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = typeExpanded && isEditing,
-                        onExpandedChange = { if (isEditing) typeExpanded = it },
-                    ) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = selectedType.label,
                             onValueChange = {},
@@ -255,11 +250,26 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                             enabled = isEditing,
                             label = { Text("Tipo") },
                             trailingIcon = {
-                                if (isEditing) ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded)
+                                if (isEditing) {
+                                    Icon(
+                                        imageVector = AppIcons.ChevronRight,
+                                        contentDescription = "Expandir"
+                                    )
+                                }
                             },
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            modifier = Modifier.fillMaxWidth(),
                         )
-                        ExposedDropdownMenu(expanded = typeExpanded && isEditing, onDismissRequest = { typeExpanded = false }) {
+                        if (isEditing) {
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { typeExpanded = !typeExpanded }
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = typeExpanded && isEditing,
+                            onDismissRequest = { typeExpanded = false }
+                        ) {
                             EquipmentType.entries.forEach { type ->
                                 DropdownMenuItem(
                                     text = { Text(type.label) },

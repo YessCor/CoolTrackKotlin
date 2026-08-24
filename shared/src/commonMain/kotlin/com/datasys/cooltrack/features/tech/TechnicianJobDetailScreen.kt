@@ -29,12 +29,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.datasys.cooltrack.ui.components.AppButtonVariant
+import kotlinx.datetime.Clock
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +71,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val techRepository: TechRepository = koinInject()
         val adminRepository: AdminRepository = koinInject()
+        val syncService: com.datasys.cooltrack.services.SyncService = koinInject()
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
 
@@ -183,6 +187,9 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                         // Evidencia fotográfica
                         Text("Evidencia fotográfica", fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
+                        var showPhotoPickerModal by remember { mutableStateOf(false) }
+                        var photosUploadedCount by remember { mutableIntStateOf(0) }
+                        
                         AppCard {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -191,7 +198,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp)
+                                        .height(110.dp)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(AppColors.SurfaceVariant)
                                         .border(1.dp, AppColors.SurfaceBorder, RoundedCornerShape(8.dp)),
@@ -201,20 +208,57 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                         Icon(
                                             AppIcons.Camera,
                                             contentDescription = null,
-                                            tint = AppColors.TextMuted,
+                                            tint = AppColors.Secondary,
                                             modifier = Modifier.size(32.dp),
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text("Toca para capturar fotos", color = AppColors.TextMuted, fontSize = 13.sp)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            if (photosUploadedCount > 0) "$photosUploadedCount foto(s) capturada(s)" else "Tomar evidencia de trabajo",
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 13.sp,
+                                        )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "Módulo de cámara próximamente",
-                                    color = AppColors.TextMuted,
-                                    fontSize = 12.sp,
+                                AppButton(
+                                    label = "Adjuntar Foto / Evidencia",
+                                    icon = AppIcons.Camera,
+                                    onPressed = { showPhotoPickerModal = true },
+                                    variant = AppButtonVariant.OUTLINE,
+                                    isFullWidth = true,
                                 )
                             }
+                        }
+
+                        if (showPhotoPickerModal) {
+                            com.datasys.cooltrack.ui.components.AppConfirmDialog(
+                                title = "Subir Evidencia Fotográfica",
+                                message = "Selecciona o toma una fotografía del equipo o trabajo realizado.",
+                                confirmText = "Simular Captura",
+                                cancelText = "Cancelar",
+                                onConfirm = {
+                                    scope.launch {
+                                        try {
+                                            val dummyBytes = "CoolTrackEvidenceImageMockData".encodeToByteArray()
+                                            syncService.queueMediaUpload(
+                                                fileBytes = dummyBytes,
+                                                fileName = "evidence_${Clock.System.now().toEpochMilliseconds()}.jpg",
+                                                orderId = currentOrder.id,
+                                                equipmentId = currentOrder.equipmentId,
+                                                context = "evidence",
+                                                caption = "Evidencia de trabajo realizada por técnico"
+                                            )
+                                            photosUploadedCount++
+                                            toastState.showSuccess("Evidencia guardada y lista para sincronizar")
+                                        } catch (e: Exception) {
+                                            toastState.showError("Error al guardar evidencia: ${e.message}")
+                                        } finally {
+                                            showPhotoPickerModal = false
+                                        }
+                                    }
+                                },
+                                onDismissRequest = { showPhotoPickerModal = false }
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
@@ -222,6 +266,9 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                         // Firma del cliente
                         Text("Firma del cliente", fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
+                        var showSignatureModal by remember { mutableStateOf(false) }
+                        var hasSignatureSaved by remember { mutableStateOf(!currentOrder.clientSignatureUrl.isNullOrBlank()) }
+
                         AppCard {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -230,29 +277,72 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp)
+                                        .height(110.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(AppColors.SurfaceVariant)
-                                        .border(1.dp, AppColors.SurfaceBorder, RoundedCornerShape(8.dp)),
+                                        .background(if (hasSignatureSaved) AppColors.Success.copy(alpha = 0.1f) else AppColors.SurfaceVariant)
+                                        .border(1.dp, if (hasSignatureSaved) AppColors.Success else AppColors.SurfaceBorder, RoundedCornerShape(8.dp)),
                                     contentAlignment = Alignment.Center,
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                         Icon(
                                             AppIcons.Signature,
                                             contentDescription = null,
-                                            tint = AppColors.TextMuted,
+                                            tint = if (hasSignatureSaved) AppColors.Success else AppColors.TextMuted,
                                             modifier = Modifier.size(32.dp),
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text("Firma del cliente aquí", color = AppColors.TextMuted, fontSize = 13.sp)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            if (hasSignatureSaved) "Firma Digital Registrada ✓" else "Solicitar firma de conformidad del cliente",
+                                            fontWeight = FontWeight.Medium,
+                                            color = if (hasSignatureSaved) AppColors.Success else AppColors.TextPrimary,
+                                            fontSize = 13.sp,
+                                        )
                                     }
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "Módulo de firma próximamente",
-                                    color = AppColors.TextMuted,
-                                    fontSize = 12.sp,
+                                AppButton(
+                                    label = if (hasSignatureSaved) "Volver a Firmar" else "Capturar Firma Digital",
+                                    icon = AppIcons.Signature,
+                                    onPressed = { showSignatureModal = true },
+                                    variant = if (hasSignatureSaved) AppButtonVariant.OUTLINE else AppButtonVariant.PRIMARY,
+                                    isFullWidth = true,
                                 )
+                            }
+                        }
+
+                        if (showSignatureModal) {
+                            com.datasys.cooltrack.ui.components.AppModal(
+                                title = "Firma de Conformidad del Cliente",
+                                onDismissRequest = { showSignatureModal = false },
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text(
+                                        "Solicite al cliente que firme dentro del recuadro:",
+                                        fontSize = 13.sp,
+                                        color = AppColors.TextSecondary,
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    com.datasys.cooltrack.ui.components.SignaturePad(
+                                        onSave = { bytes ->
+                                            scope.launch {
+                                                try {
+                                                    syncService.queueSignatureUpload(
+                                                        orderId = currentOrder.id,
+                                                        fileBytes = bytes,
+                                                        fileName = "signature_${currentOrder.id}.png"
+                                                    )
+                                                    syncService.syncAll()
+                                                    hasSignatureSaved = true
+                                                    toastState.showSuccess("Firma guardada correctamente")
+                                                } catch (e: Exception) {
+                                                    toastState.showError("Error al guardar firma: ${e.message}")
+                                                } finally {
+                                                    showSignatureModal = false
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
 

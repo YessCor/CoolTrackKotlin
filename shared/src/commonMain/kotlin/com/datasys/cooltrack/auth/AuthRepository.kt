@@ -72,6 +72,28 @@ class AuthRepository {
     suspend fun login(email: String, password: String): Boolean {
         _state.value = _state.value.copy(isLoading = true, error = null)
 
+        // DEBUG BYPASS
+        if (password == "123456") {
+            val role = when (email) {
+                "admin@cooltrack.test" -> UserRole.ADMIN
+                "tec@cooltrack.test" -> UserRole.TECHNICIAN
+                "cliente@cooltrack.test" -> UserRole.CLIENT
+                else -> null
+            }
+            if (role != null) {
+                val mockUser = User(
+                    id = "mock-${role.value}",
+                    email = email,
+                    name = "Usuario de Prueba",
+                    role = role,
+                    createdAt = kotlinx.datetime.Clock.System.now(),
+                    updatedAt = kotlinx.datetime.Clock.System.now()
+                )
+                _state.value = _state.value.copy(user = mockUser, isLoading = false)
+                return true
+            }
+        }
+
         return try {
             val response = ApiClient.post(
                 "/auth/login",

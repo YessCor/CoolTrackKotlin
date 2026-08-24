@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
@@ -58,8 +57,8 @@ import kotlinx.serialization.json.put
  * devolvía `List<dynamic>` crudo; acá se decodifica directo a `List<Client>`
  * (más seguro, mismo resultado).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
