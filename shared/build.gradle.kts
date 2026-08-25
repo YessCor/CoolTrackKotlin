@@ -57,6 +57,7 @@ kotlin {
                 implementation("io.github.jan-tennert.supabase:auth-kt:3.0.2")
                 implementation("io.github.jan-tennert.supabase:realtime-kt:3.0.2")
                 implementation("io.github.jan-tennert.supabase:storage-kt:3.0.2")
+                implementation("io.github.jan-tennert.supabase:functions-kt:3.0.2")
 
                 // hive -> SQLDelight (persistencia offline)
                 implementation("app.cash.sqldelight:runtime:2.0.2")

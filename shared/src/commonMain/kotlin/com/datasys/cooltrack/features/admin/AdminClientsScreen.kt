@@ -39,13 +39,12 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.core.ApiClient
-import com.datasys.cooltrack.core.getListData
 import com.datasys.cooltrack.models.Client
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_clients_screen.dart (incluye su `clientsProvider`
@@ -57,6 +56,7 @@ class AdminClientsScreen : Screen {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
+        val adminRepository: AdminRepository = koinInject()
 
         var clients by remember { mutableStateOf<List<Client>?>(null) }
         var isLoading by remember { mutableStateOf(true) }
@@ -66,7 +66,7 @@ class AdminClientsScreen : Screen {
             isLoading = true
             errorMessage = null
             try {
-                clients = ApiClient.getListData("/clients")
+                clients = adminRepository.getAllClients()
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Error desconocido"
             } finally {

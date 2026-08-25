@@ -36,17 +36,16 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.QuoteStatus
-import com.datasys.cooltrack.core.getListData
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_quotes_screen.dart (incluye su `quotesProvider`
- * local, vía `ApiClient.get('/quotes')`). Igual que en el original, los
+ * local, ahora vía `AdminRepository.getAllQuotes()` sobre Supabase). Igual que en el original, los
  * ítems de la lista no navegan a ningún detalle (no existe una
  * `admin_quote_detail_screen.dart`) — el FAB sí se conectó a
  * `AdminQuoteNewScreen`, ya que en Dart quedaba como comentario
@@ -56,12 +55,13 @@ class AdminQuotesScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val adminRepository: AdminRepository = koinInject()
         var quotes by remember { mutableStateOf<List<Quote>?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
             try {
-                quotes = ApiClient.getListData("/quotes")
+                quotes = adminRepository.getAllQuotes()
             } catch (e: Exception) {
                 errorMessage = e.message
             }

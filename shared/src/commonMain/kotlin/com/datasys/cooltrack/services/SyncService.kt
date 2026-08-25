@@ -2,6 +2,9 @@
 
 package com.datasys.cooltrack.services
 
+import com.datasys.cooltrack.core.secureDelete
+import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.core.secureUpdate
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
@@ -80,17 +83,17 @@ class SyncService(
         return when (action) {
             "insert" -> {
                 if (table == null || data == null) return false
-                supabase.from(table).insert(data)
+                supabase.secureInsert<JsonObject>(table, data)
                 true
             }
             "update" -> {
                 if (table == null || data == null || id == null) return false
-                supabase.from(table).update(data) { filter { eq("id", id) } }
+                supabase.secureUpdate(table, data, match = mapOf("id" to JsonPrimitive(id)))
                 true
             }
             "delete" -> {
                 if (table == null || id == null) return false
-                supabase.from(table).delete { filter { eq("id", id) } }
+                supabase.secureDelete(table, match = mapOf("id" to JsonPrimitive(id)))
                 true
             }
             "upload_media" -> processMediaUpload(item)
@@ -113,7 +116,8 @@ class SyncService(
         val uploadResult = photoService.uploadPhoto(image, folder = context)
 
         if (uploadResult.success && uploadResult.url != null) {
-            supabase.from("media").insert(
+            supabase.secureInsert<JsonObject>(
+                "media",
                 buildJsonObject {
                     put("url", uploadResult.url)
                     put("public_id", uploadResult.publicId ?: "")
@@ -123,7 +127,7 @@ class SyncService(
                     metadata["context"]?.let { put("context", it) }
                     metadata["caption"]?.let { put("caption", it) }
                     supabase.auth.currentUserOrNull()?.id?.let { put("uploaded_by", it) }
-                }
+                },
             )
             return true
         }
@@ -143,9 +147,11 @@ class SyncService(
         val uploadResult = photoService.uploadPhoto(image, folder = "signatures")
 
         if (uploadResult.success && uploadResult.url != null) {
-            supabase.from("service_orders").update(
-                buildJsonObject { put("client_signature_url", uploadResult.url) }
-            ) { filter { eq("id", orderId) } }
+            supabase.secureUpdate(
+                "service_orders",
+                buildJsonObject { put("client_signature_url", uploadResult.url) },
+                match = mapOf("id" to JsonPrimitive(orderId)),
+            )
             return true
         }
         return false

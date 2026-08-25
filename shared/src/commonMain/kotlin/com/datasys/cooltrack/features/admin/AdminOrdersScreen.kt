@@ -37,28 +37,28 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
-import com.datasys.cooltrack.core.getListData
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_orders_screen.dart (incluye su `ordersProvider`
- * local, vía `ApiClient.get('/orders')`).
+ * local, ahora vía `AdminRepository.getAllOrders()` sobre Supabase).
  */
 class AdminOrdersScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val adminRepository: AdminRepository = koinInject()
         var orders by remember { mutableStateOf<List<ServiceOrder>?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
             try {
-                orders = ApiClient.getListData("/orders")
+                orders = adminRepository.getAllOrders()
             } catch (e: Exception) {
                 errorMessage = e.message
             }

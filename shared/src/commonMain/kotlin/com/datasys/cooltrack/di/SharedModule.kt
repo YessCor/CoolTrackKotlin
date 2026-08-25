@@ -10,7 +10,6 @@ import com.datasys.cooltrack.features.client.ClientRepository
 import com.datasys.cooltrack.location.LocationRepository
 import com.datasys.cooltrack.notifications.NotificationRepository
 import com.datasys.cooltrack.photo.PhotoUploadRepository
-import com.datasys.cooltrack.services.DashboardService
 import com.datasys.cooltrack.services.ImagePickerService
 import com.datasys.cooltrack.services.LocationProvider
 import com.datasys.cooltrack.services.LocationService
@@ -21,6 +20,7 @@ import com.datasys.cooltrack.services.PhotoUploadService
 import com.datasys.cooltrack.services.SyncService
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
@@ -32,7 +32,7 @@ import org.koin.dsl.module
  * constructor injection en vez de `ref.watch(authProvider)`.
  */
 val sharedModule = module {
-    single { AuthRepository() }
+    single { AuthRepository(get()) }
 
     // Equivalente a Supabase.instance.client (supabase_flutter)
     single {
@@ -44,6 +44,7 @@ val sharedModule = module {
             install(Postgrest)
             install(Realtime)
             install(Storage)
+            install(Functions)
         }
     }
 
@@ -57,8 +58,6 @@ val sharedModule = module {
     single { LocationService(get(), get()) }
 
     single { SyncService(get(), get(), get()) }
-
-    single { DashboardService() }
 
     single { PdfRenderer() }
     single { PdfService(get()) }

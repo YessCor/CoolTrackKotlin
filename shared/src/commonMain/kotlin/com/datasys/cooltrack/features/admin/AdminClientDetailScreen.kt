@@ -42,10 +42,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.core.getListData
-import com.datasys.cooltrack.core.getObjectDataOrNull
 import com.datasys.cooltrack.models.Client
 import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.ui.components.AppButton
@@ -55,10 +52,7 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_client_detail_screen.dart. `_loadClient()` cargaba el
@@ -72,6 +66,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
+        val adminRepository: AdminRepository = koinInject()
 
         var client by remember { mutableStateOf<Client?>(null) }
         var equipment by remember { mutableStateOf<List<Equipment>?>(null) }
@@ -87,7 +82,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
 
         suspend fun loadClient() {
             isLoading = true
-            val loaded = ApiClient.getObjectDataOrNull<Client>("/clients/$clientId")
+            val loaded = adminRepository.getClientById(clientId)
             if (loaded != null) {
                 client = loaded
                 name = loaded.name
@@ -100,7 +95,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
 
         suspend fun loadEquipment() {
             equipment = try {
-                ApiClient.getListData("/equipment", mapOf("client_id" to clientId))
+                adminRepository.getAllEquipment(clientId)
             } catch (e: Exception) {
                 emptyList()
             }
@@ -118,14 +113,12 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             scope.launch {
                 isSaving = true
                 try {
-                    ApiClient.put(
-                        "/clients/$clientId",
-                        buildJsonObject {
-                            put("name", name.trim())
-                            put("email", if (email.trim().isEmpty()) JsonNull else JsonPrimitive(email.trim()))
-                            put("phone", if (phone.trim().isEmpty()) JsonNull else JsonPrimitive(phone.trim()))
-                            put("address", if (address.trim().isEmpty()) JsonNull else JsonPrimitive(address.trim()))
-                        },
+                    adminRepository.updateClient(
+                        id = clientId,
+                        name = name.trim(),
+                        email = email.trim().ifEmpty { null },
+                        phone = phone.trim().ifEmpty { null },
+                        address = address.trim().ifEmpty { null },
                     )
                     toastState.showSuccess("Cliente actualizado")
                     isEditing = false

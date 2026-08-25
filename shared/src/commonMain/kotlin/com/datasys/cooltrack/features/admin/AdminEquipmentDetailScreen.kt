@@ -43,10 +43,8 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
-import com.datasys.cooltrack.core.getObjectDataOrNull
 import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
@@ -56,8 +54,9 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import org.koin.compose.koinInject
 
 /** Equivalente a admin_equipment_detail_screen.dart. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,6 +66,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
+        val adminRepository: AdminRepository = koinInject()
 
         var equipment by remember { mutableStateOf<Equipment?>(null) }
         var isLoading by remember { mutableStateOf(true) }
@@ -87,7 +87,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
 
         suspend fun load() {
             isLoading = true
-            val loaded = ApiClient.getObjectDataOrNull<Equipment>("/equipment/$equipmentId")
+            val loaded = adminRepository.getEquipmentById(equipmentId)
             if (loaded != null) {
                 equipment = loaded
                 name = loaded.name
@@ -111,19 +111,17 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
             scope.launch {
                 isSaving = true
                 try {
-                    ApiClient.put(
-                        "/equipment/$equipmentId",
-                        buildJsonObject {
-                            put("name", name.trim())
-                            put("type", selectedType.value)
-                            brand.trim().takeIf { it.isNotEmpty() }?.let { put("brand", it) }
-                            model.trim().takeIf { it.isNotEmpty() }?.let { put("model", it) }
-                            serial.trim().takeIf { it.isNotEmpty() }?.let { put("serial_number", it) }
-                            capacity.trim().toDoubleOrNull()?.let { put("capacity_tons", it) }
-                            location.trim().takeIf { it.isNotEmpty() }?.let { put("location_description", it) }
-                            notes.trim().takeIf { it.isNotEmpty() }?.let { put("notes", it) }
-                        },
-                    )
+                    val fields = buildMap<String, JsonElement> {
+                        put("name", JsonPrimitive(name.trim()))
+                        put("type", JsonPrimitive(selectedType.value))
+                        brand.trim().takeIf { it.isNotEmpty() }?.let { put("brand", JsonPrimitive(it)) }
+                        model.trim().takeIf { it.isNotEmpty() }?.let { put("model", JsonPrimitive(it)) }
+                        serial.trim().takeIf { it.isNotEmpty() }?.let { put("serial_number", JsonPrimitive(it)) }
+                        capacity.trim().toDoubleOrNull()?.let { put("capacity_tons", JsonPrimitive(it)) }
+                        location.trim().takeIf { it.isNotEmpty() }?.let { put("location_description", JsonPrimitive(it)) }
+                        notes.trim().takeIf { it.isNotEmpty() }?.let { put("notes", JsonPrimitive(it)) }
+                    }
+                    adminRepository.updateEquipment(equipmentId, fields)
                     toastState.showSuccess("Equipo actualizado")
                     isEditing = false
                     load()
@@ -138,7 +136,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
         fun delete() {
             scope.launch {
                 try {
-                    ApiClient.delete("/equipment/$equipmentId")
+                    adminRepository.deleteEquipment(equipmentId)
                     toastState.showSuccess("Equipo eliminado")
                     navigator.pop()
                 } catch (e: Exception) {

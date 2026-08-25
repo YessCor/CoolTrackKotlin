@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -31,8 +30,7 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_client_new_screen.dart. El `Form` + `GlobalKey<FormState>`
@@ -46,6 +44,7 @@ class AdminClientNewScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
+        val adminRepository: AdminRepository = koinInject()
 
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
@@ -70,14 +69,11 @@ class AdminClientNewScreen : Screen {
             scope.launch {
                 isLoading = true
                 try {
-                    ApiClient.post(
-                        "/clients",
-                        buildJsonObject {
-                            put("name", name.trim())
-                            put("email", email.trim())
-                            put("phone", phone.trim())
-                            put("address", address.trim())
-                        },
+                    adminRepository.createClient(
+                        name = name.trim(),
+                        email = email.trim(),
+                        phone = phone.trim(),
+                        address = address.trim(),
                     )
                     toastState.showSuccess("Cliente creado exitosamente")
                     navigator.pop()

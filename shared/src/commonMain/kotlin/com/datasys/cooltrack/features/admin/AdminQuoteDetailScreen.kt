@@ -38,15 +38,13 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.core.getListData
-import com.datasys.cooltrack.core.getObjectDataOrNull
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.QuoteItem
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
+import org.koin.compose.koinInject
 
 /**
  * Detalle de cotización para admin.
@@ -57,13 +55,14 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val adminRepository: AdminRepository = koinInject()
         var quote by remember { mutableStateOf<Quote?>(null) }
         var isLoading by remember { mutableStateOf(true) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(quoteId) {
             try {
-                quote = ApiClient.getObjectDataOrNull<Quote>("/quotes/$quoteId")
+                quote = adminRepository.getQuoteById(quoteId)
             } catch (e: Exception) {
                 errorMessage = e.message
             } finally {

@@ -1,9 +1,12 @@
 package com.datasys.cooltrack.features.client
 
+import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.core.secureUpdate
 import com.datasys.cooltrack.models.ServiceOrder
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -33,11 +36,14 @@ class ClientRepository(private val supabase: SupabaseClient) {
 
     /** Calificar una orden completada. */
     suspend fun rateOrder(orderId: String, rating: Int, feedback: String?) {
-        supabase.from("service_orders")
-            .update(kotlinx.serialization.json.buildJsonObject {
+        supabase.secureUpdate(
+            "service_orders",
+            buildJsonObject {
                 put("client_rating", rating)
                 feedback?.let { put("client_feedback", it) }
-            }) { filter { eq("id", orderId) } }
+            },
+            match = mapOf("id" to JsonPrimitive(orderId)),
+        )
     }
 
     /** Crear una nueva solicitud de servicio. */
@@ -49,22 +55,19 @@ class ClientRepository(private val supabase: SupabaseClient) {
         address: String,
         latitude: Double? = null,
         longitude: Double? = null
-    ): ServiceOrder {
-        return supabase.from("service_orders")
-            .insert(buildJsonObject {
-                put("client_id", clientId)
-                equipmentId?.let { put("equipment_id", it) }
-                put("service_type", serviceType)
-                put("description", description)
-                put("address", address)
-                latitude?.let { put("latitude", it) }
-                longitude?.let { put("longitude", it) }
-                put("status", "pending")
-                put("created_at", kotlinx.datetime.Clock.System.now().toString())
-                put("updated_at", kotlinx.datetime.Clock.System.now().toString())
-            }) {
-                select()
-            }
-            .decodeSingle()
-    }
+    ): ServiceOrder = supabase.secureInsert(
+        "service_orders",
+        buildJsonObject {
+            put("client_id", clientId)
+            equipmentId?.let { put("equipment_id", it) }
+            put("service_type", serviceType)
+            put("description", description)
+            put("address", address)
+            latitude?.let { put("latitude", it) }
+            longitude?.let { put("longitude", it) }
+            put("status", "pending")
+            put("created_at", kotlinx.datetime.Clock.System.now().toString())
+            put("updated_at", kotlinx.datetime.Clock.System.now().toString())
+        },
+    )
 }

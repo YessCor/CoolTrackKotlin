@@ -36,10 +36,8 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
-import com.datasys.cooltrack.core.getListData
 import com.datasys.cooltrack.models.Client
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -47,8 +45,9 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_equipment_new_screen.dart. El `DropdownButtonFormField`
@@ -64,6 +63,7 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
+        val adminRepository: AdminRepository = koinInject()
 
         var clients by remember { mutableStateOf<List<Client>?>(null) }
         var selectedClientId by remember { mutableStateOf(clientId) }
@@ -83,7 +83,7 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
 
         LaunchedEffect(Unit) {
             clients = try {
-                ApiClient.getListData("/clients")
+                adminRepository.getAllClients()
             } catch (e: Exception) {
                 emptyList()
             }
@@ -97,20 +97,18 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
             scope.launch {
                 isSaving = true
                 try {
-                    ApiClient.post(
-                        "/equipment",
-                        buildJsonObject {
-                            put("client_id", selectedClientId)
-                            put("name", name.trim())
-                            put("type", selectedType.value)
-                            brand.trim().takeIf { it.isNotEmpty() }?.let { put("brand", it) }
-                            model.trim().takeIf { it.isNotEmpty() }?.let { put("model", it) }
-                            serial.trim().takeIf { it.isNotEmpty() }?.let { put("serial_number", it) }
-                            capacity.trim().toDoubleOrNull()?.let { put("capacity_tons", it) }
-                            location.trim().takeIf { it.isNotEmpty() }?.let { put("location_description", it) }
-                            notes.trim().takeIf { it.isNotEmpty() }?.let { put("notes", it) }
-                        },
-                    )
+                    val fields = buildMap<String, JsonElement> {
+                        put("client_id", JsonPrimitive(selectedClientId))
+                        put("name", JsonPrimitive(name.trim()))
+                        put("type", JsonPrimitive(selectedType.value))
+                        brand.trim().takeIf { it.isNotEmpty() }?.let { put("brand", JsonPrimitive(it)) }
+                        model.trim().takeIf { it.isNotEmpty() }?.let { put("model", JsonPrimitive(it)) }
+                        serial.trim().takeIf { it.isNotEmpty() }?.let { put("serial_number", JsonPrimitive(it)) }
+                        capacity.trim().toDoubleOrNull()?.let { put("capacity_tons", JsonPrimitive(it)) }
+                        location.trim().takeIf { it.isNotEmpty() }?.let { put("location_description", JsonPrimitive(it)) }
+                        notes.trim().takeIf { it.isNotEmpty() }?.let { put("notes", JsonPrimitive(it)) }
+                    }
+                    adminRepository.createEquipment(fields)
                     toastState.showSuccess("Equipo creado")
                     navigator.pop()
                 } catch (e: Exception) {

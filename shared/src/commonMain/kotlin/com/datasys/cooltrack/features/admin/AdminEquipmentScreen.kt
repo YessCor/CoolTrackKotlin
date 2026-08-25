@@ -34,24 +34,24 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.core.getListData
 import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
+import org.koin.compose.koinInject
 
 /** Equivalente a admin_equipment_screen.dart (con su `equipmentProvider` local). */
 class AdminEquipmentScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val adminRepository: AdminRepository = koinInject()
         var equipment by remember { mutableStateOf<List<Equipment>?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
             try {
-                equipment = ApiClient.getListData("/equipment")
+                equipment = adminRepository.getAllEquipment()
             } catch (e: Exception) {
                 errorMessage = e.message
             }

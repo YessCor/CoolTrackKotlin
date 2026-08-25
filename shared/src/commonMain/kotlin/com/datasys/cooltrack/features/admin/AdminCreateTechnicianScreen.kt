@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -41,27 +40,33 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.koin.compose.koinInject
 
-/** Equivalente a admin_create_technician_screen.dart. */
+/**
+ * Equivalente a admin_create_technician_screen.dart.
+ *
+ * Nota importante: crear una cuenta de Supabase Auth para *otra* persona
+ * (con contraseña) requiere el `service_role` (admin API de Supabase), que
+ * no puede vivir en el cliente Android por seguridad — es el mismo motivo
+ * por el que no se usó la `service_role` key para configurar esta app. Acá
+ * solo se crea el perfil en `public.users`; el técnico necesita una cuenta
+ * de Auth real creada aparte (panel de Supabase, o una Edge Function
+ * server-side) antes de poder iniciar sesión con ese correo.
+ */
 class AdminCreateTechnicianScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
+        val adminRepository: AdminRepository = koinInject()
 
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var phone by remember { mutableStateOf("") }
-        var password by remember { mutableStateOf("") }
-        var confirmPassword by remember { mutableStateOf("") }
 
         var nameError by remember { mutableStateOf<String?>(null) }
         var emailError by remember { mutableStateOf<String?>(null) }
-        var passwordError by remember { mutableStateOf<String?>(null) }
-        var confirmPasswordError by remember { mutableStateOf<String?>(null) }
         var isSaving by remember { mutableStateOf(false) }
 
         fun validate(): Boolean {
@@ -71,17 +76,7 @@ class AdminCreateTechnicianScreen : Screen {
                 !email.contains("@") -> "Email inválido"
                 else -> null
             }
-            passwordError = when {
-                password.trim().isEmpty() -> "Requerido"
-                password.length < 6 -> "Mínimo 6 caracteres"
-                else -> null
-            }
-            confirmPasswordError = when {
-                confirmPassword.trim().isEmpty() -> "Requerido"
-                confirmPassword != password -> "Las contraseñas no coinciden"
-                else -> null
-            }
-            return listOf(nameError, emailError, passwordError, confirmPasswordError).all { it == null }
+            return listOf(nameError, emailError).all { it == null }
         }
 
         fun submit() {
@@ -90,17 +85,12 @@ class AdminCreateTechnicianScreen : Screen {
             scope.launch {
                 isSaving = true
                 try {
-                    ApiClient.post(
-                        "/users",
-                        buildJsonObject {
-                            put("name", name.trim())
-                            put("email", email.trim())
-                            phone.trim().takeIf { it.isNotEmpty() }?.let { put("phone", it) }
-                            put("password", password)
-                            put("role", "technician")
-                        },
+                    adminRepository.createTechnicianProfile(
+                        name = name.trim(),
+                        email = email.trim(),
+                        phone = phone.trim().ifEmpty { null },
                     )
-                    toastState.showSuccess("Técnico creado")
+                    toastState.showSuccess("Perfil de técnico creado")
                     navigator.pop()
                 } catch (e: Exception) {
                     toastState.showError("Error: ${e.message}")
@@ -157,26 +147,6 @@ class AdminCreateTechnicianScreen : Screen {
                     keyboardType = KeyboardType.Phone,
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
-                Text("Credenciales", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                AppInput(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = "Contraseña *",
-                    obscureText = true,
-                    errorText = passwordError,
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                AppInput(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    label = "Confirmar Contraseña *",
-                    obscureText = true,
-                    errorText = confirmPasswordError,
-                )
-
                 Spacer(modifier = Modifier.height(32.dp))
                 Row(
                     modifier = Modifier
@@ -187,7 +157,10 @@ class AdminCreateTechnicianScreen : Screen {
                     Icon(imageVector = AppIcons.Info, contentDescription = null, tint = Color(0xFF2196F3))
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        "El técnico recibirá un email con las instrucciones para acceder a la aplicación.",
+                        "Esto crea el perfil del técnico. Para que pueda iniciar sesión todavía hace " +
+                            "falta darle de alta una cuenta con este mismo correo (panel de Supabase o " +
+                            "una función server-side) — un cliente Android no puede crear cuentas de otros " +
+                            "usuarios de forma segura.",
                         fontSize = 14.sp,
                         modifier = Modifier.weight(1f),
                     )

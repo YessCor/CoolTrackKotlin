@@ -44,7 +44,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
-import com.datasys.cooltrack.core.ApiClient
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.features.admin.AdminShellScreen
 import com.datasys.cooltrack.features.client.ClientShellScreen
@@ -56,9 +55,9 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import com.datasys.cooltrack.util.collectAsStateSimple
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.koin.compose.koinInject
 
 /**
@@ -203,6 +202,7 @@ class ForgotPasswordScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val toastState = rememberAppToastState()
         val scope = rememberCoroutineScope()
+        val supabase: SupabaseClient = koinInject()
 
         var email by remember { mutableStateOf("") }
         var submitted by remember { mutableStateOf(false) }
@@ -270,10 +270,7 @@ class ForgotPasswordScreen : Screen {
                             scope.launch {
                                 isLoading = true
                                 try {
-                                    ApiClient.post(
-                                        "/auth/forgot-password",
-                                        buildJsonObject { put("email", email.trim()) }
-                                    )
+                                    supabase.auth.resetPasswordForEmail(email.trim())
                                     successMessage = "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña."
                                     toastState.showSuccess("Correo enviado")
                                 } catch (e: Exception) {

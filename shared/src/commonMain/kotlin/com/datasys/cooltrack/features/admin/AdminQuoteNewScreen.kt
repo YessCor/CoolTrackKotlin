@@ -55,9 +55,8 @@ import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
+import com.datasys.cooltrack.core.secureInsert
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
@@ -156,13 +155,12 @@ class AdminQuoteNewScreen : Screen {
                         put("valid_until", validUntil.toString())
                     }
 
-                    val quoteId = supabase.from("quotes")
-                        .insert(quoteJson) { select(Columns.list("id")) }
-                        .decodeSingle<IdOnly>()
-                        .id
+                    val quoteId = supabase.secureInsert<IdOnly>("quotes", quoteJson).id
 
-                    val itemsJson: List<JsonObject> = items.map { item ->
-                        buildJsonObject {
+                    // secure-db no soporta batch insert en un solo request; se
+                    // inserta cada item por separado (son pocos por cotización).
+                    for (item in items) {
+                        val itemJson = buildJsonObject {
                             put("quote_id", quoteId)
                             item.catalogItemId?.let { put("catalog_item_id", it) }
                             put("description", item.description)
@@ -170,8 +168,8 @@ class AdminQuoteNewScreen : Screen {
                             put("unit_price", item.unitPrice.toDoubleOrNull() ?: 0.0)
                             put("total", item.total)
                         }
+                        supabase.secureInsert<JsonObject>("quote_items", itemJson)
                     }
-                    supabase.from("quote_items").insert(itemsJson)
 
                     toastState.showSuccess("Cotización creada y enviada")
                     navigator.pop()

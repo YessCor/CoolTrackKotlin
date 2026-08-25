@@ -1,5 +1,7 @@
 package com.datasys.cooltrack.notifications
 
+import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.core.secureUpdate
 import com.datasys.cooltrack.models.AppNotification
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
@@ -16,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -76,9 +80,11 @@ class NotificationRepository(
     }
 
     suspend fun markAsRead(id: String) {
-        supabase.from("notifications").update(
-            buildJsonObject { put("is_read", true) }
-        ) { filter { eq("id", id) } }
+        supabase.secureUpdate(
+            "notifications",
+            buildJsonObject { put("is_read", true) },
+            match = mapOf("id" to JsonPrimitive(id)),
+        )
     }
 
     suspend fun sendNotification(
@@ -88,14 +94,15 @@ class NotificationRepository(
         orderId: String? = null,
         type: String? = null,
     ) {
-        supabase.from("notifications").insert(
+        supabase.secureInsert<JsonObject>(
+            "notifications",
             buildJsonObject {
                 put("user_id", userId)
                 put("title", title)
                 put("message", message)
                 orderId?.let { put("order_id", it) }
                 type?.let { put("type", it) }
-            }
+            },
         )
     }
 }

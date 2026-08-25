@@ -37,3 +37,6 @@ androidApp/build/
 
 # Artifacts (internal agent logs)
 .artifacts/
+
+# Supabase CLI local state
+supabase/.temp/
