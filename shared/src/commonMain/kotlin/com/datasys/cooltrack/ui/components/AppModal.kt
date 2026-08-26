@@ -1,5 +1,6 @@
 package com.datasys.cooltrack.ui.components
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -22,9 +24,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.datasys.cooltrack.core.AppColors
 
 /**
@@ -52,7 +52,8 @@ fun AppModal(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = AppColors.Surface,
     ) {
         Column {
             if (title != null) {
@@ -62,8 +63,7 @@ fun AppModal(
                 ) {
                     Text(
                         text = title,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.weight(1f),
                     )
                     IconButton(onClick = onDismissRequest) {
@@ -105,14 +105,17 @@ fun AppConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(text = title, fontWeight = FontWeight.Bold) },
-        text = { Text(text = message) },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AppColors.Surface,
+        title = { Text(text = title, style = MaterialTheme.typography.titleLarge) },
+        text = { Text(text = message, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary) },
         confirmButton = {
             Button(
                 onClick = {
                     onDismissRequest()
                     onConfirm()
                 },
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = confirmColor ?: AppColors.Secondary,
                     contentColor = Color.White,
@@ -120,7 +123,7 @@ fun AppConfirmDialog(
             ) { Text(text = confirmText) }
         },
         dismissButton = {
-            TextButton(onClick = onDismissRequest) { Text(text = cancelText) }
+            TextButton(onClick = onDismissRequest) { Text(text = cancelText, color = AppColors.TextSecondary) }
         },
     )
 }

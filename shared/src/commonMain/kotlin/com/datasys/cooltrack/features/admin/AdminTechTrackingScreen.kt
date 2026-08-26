@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.TechnicianLocation
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -113,7 +114,8 @@ class AdminTechTrackingScreen : Screen {
             }
         }
 
-        Scaffold(topBar = { TopAppBar(title = { Text("Rastreo de Técnicos") }) }) { padding ->
+        Scaffold(topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Rastreo de Técnicos") }) }) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 if (latestLocations.isEmpty()) {
                     AppEmptyState(

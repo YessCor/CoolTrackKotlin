@@ -40,6 +40,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.Client
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -77,7 +78,8 @@ class AdminClientsScreen : Screen {
         LaunchedEffect(Unit) { load() }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Clientes") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Clientes") }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { navigator.push(AdminClientNewScreen()) }) {
                     Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo cliente")

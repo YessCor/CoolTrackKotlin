@@ -50,6 +50,7 @@ import com.datasys.cooltrack.models.User
 import com.datasys.cooltrack.services.PdfContentBuilder
 import com.datasys.cooltrack.services.PdfService
 import com.datasys.cooltrack.services.SyncService
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
@@ -141,7 +142,8 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {

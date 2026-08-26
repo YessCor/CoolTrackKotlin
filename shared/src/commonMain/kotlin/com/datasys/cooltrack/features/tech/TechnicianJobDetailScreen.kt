@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import kotlinx.datetime.Clock
 import androidx.compose.ui.draw.clip
@@ -88,7 +89,8 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import org.koin.compose.koinInject
@@ -70,7 +71,8 @@ class AdminReportsScreen : Screen {
             }
         }
 
-        Scaffold(topBar = { TopAppBar(title = { Text("Informes de Rendimiento") }) }) { padding ->
+        Scaffold(topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Informes de Rendimiento") }) }) { padding ->
             val current = data
             when {
                 current == null && errorMessage == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {

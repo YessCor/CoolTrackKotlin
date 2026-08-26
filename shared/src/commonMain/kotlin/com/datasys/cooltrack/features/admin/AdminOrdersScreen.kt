@@ -40,6 +40,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import org.koin.compose.koinInject
@@ -66,7 +67,8 @@ class AdminOrdersScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Órdenes de Servicio") },
                     actions = {
                         // El original deja el filtro sin implementar

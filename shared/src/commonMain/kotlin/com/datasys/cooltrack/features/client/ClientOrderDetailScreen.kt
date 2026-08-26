@@ -42,6 +42,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
@@ -78,7 +79,8 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {

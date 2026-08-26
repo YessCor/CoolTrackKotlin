@@ -36,6 +36,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.Equipment
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import org.koin.compose.koinInject
@@ -58,7 +59,8 @@ class AdminEquipmentScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Equipos") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Equipos") }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { navigator.push(AdminEquipmentNewScreen()) }) {
                     Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo equipo")

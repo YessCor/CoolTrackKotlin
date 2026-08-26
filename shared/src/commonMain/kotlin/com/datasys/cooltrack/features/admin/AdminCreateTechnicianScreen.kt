@@ -14,10 +14,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,7 +27,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
@@ -102,8 +104,9 @@ class AdminCreateTechnicianScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
                     title = { Text("Crear Técnico") },
+                    expandedHeight = 44.dp,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = AppColors.Primary,
                         titleContentColor = Color.White,
@@ -151,17 +154,18 @@ class AdminCreateTechnicianScreen : Screen {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0x1A2196F3), RoundedCornerShape(12.dp))
+                        .background(AppColors.Info.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                         .padding(16.dp),
                 ) {
-                    Icon(imageVector = AppIcons.Info, contentDescription = null, tint = Color(0xFF2196F3))
+                    Icon(imageVector = AppIcons.Info, contentDescription = null, tint = AppColors.Info)
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         "Esto crea el perfil del técnico. Para que pueda iniciar sesión todavía hace " +
                             "falta darle de alta una cuenta con este mismo correo (panel de Supabase o " +
                             "una función server-side) — un cliente Android no puede crear cuentas de otros " +
                             "usuarios de forma segura.",
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppColors.TextSecondary,
                         modifier = Modifier.weight(1f),
                     )
                 }

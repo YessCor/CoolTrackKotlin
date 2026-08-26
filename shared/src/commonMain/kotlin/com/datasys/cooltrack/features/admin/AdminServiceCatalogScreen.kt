@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceCatalog
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppToastHost
@@ -67,7 +68,8 @@ class AdminServiceCatalogScreen : Screen {
         LaunchedEffect(Unit) { load() }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Catálogo de Servicios") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Catálogo de Servicios") }) },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { toastState.showInfo("Funcionalidad de añadir próximamente") },

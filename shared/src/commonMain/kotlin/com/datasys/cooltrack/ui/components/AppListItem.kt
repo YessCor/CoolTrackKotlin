@@ -1,8 +1,10 @@
 package com.datasys.cooltrack.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -21,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.datasys.cooltrack.core.AppColors
@@ -61,17 +64,17 @@ fun AppListItem(
                 Spacer(modifier = Modifier.width(16.dp))
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = title, style = MaterialTheme.typography.titleMedium)
                 if (subtitle != null) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = subtitle, fontSize = 14.sp, color = AppColors.TextMuted)
+                    Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextMuted)
                 }
             }
             if (trailingText != null) {
                 Text(
                     text = trailingText,
                     color = AppColors.TextMuted,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
@@ -105,10 +108,9 @@ fun AppSectionHeader(
     ) {
         Text(
             text = title.uppercase(),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelMedium,
             color = AppColors.TextMuted,
-            letterSpacing = 0.5.sp,
+            letterSpacing = 0.8.sp,
         )
         trailing?.invoke()
     }
@@ -127,22 +129,31 @@ fun AppEmptyState(
         modifier = modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = AppColors.TextMuted,
-            modifier = Modifier.size(64.dp),
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier.size(88.dp).background(AppColors.Secondary.copy(alpha = 0.1f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = AppColors.Secondary,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = title,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
         )
         if (message != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = message, color = AppColors.TextMuted, textAlign = TextAlign.Center)
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextSecondary,
+                textAlign = TextAlign.Center,
+            )
         }
         if (action != null) {
             Spacer(modifier = Modifier.height(24.dp))

@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,10 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.datasys.cooltrack.core.AppColors
 
 /** Equivalente a AppButtonVariant en components/button.dart. */
@@ -85,8 +84,11 @@ fun AppButton(
                 }
                 Text(
                     text = label,
-                    fontSize = if (variant == AppButtonVariant.TEXT) 14.sp else 16.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = if (variant == AppButtonVariant.TEXT) {
+                        MaterialTheme.typography.labelLarge
+                    } else {
+                        MaterialTheme.typography.titleSmall
+                    },
                 )
             }
         }
@@ -99,6 +101,7 @@ fun AppButton(
             modifier = sizedModifier,
             shape = shape,
             contentPadding = contentPadding,
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp, pressedElevation = 0.dp, disabledElevation = 0.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = AppColors.Secondary,
                 contentColor = Color.White,

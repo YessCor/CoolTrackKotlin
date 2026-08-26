@@ -45,6 +45,7 @@ import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.NotificationType
 import com.datasys.cooltrack.models.AppNotification
 import com.datasys.cooltrack.notifications.NotificationRepository
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.util.collectAsStateSimple
@@ -72,7 +73,8 @@ class NotificationsScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Notificaciones")

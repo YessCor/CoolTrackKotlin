@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -37,6 +38,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -54,7 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +71,8 @@ import com.datasys.cooltrack.features.notifications.NotificationsScreen
 import com.datasys.cooltrack.models.DashboardStats
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.notifications.NotificationRepository
+import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppConfirmDialog
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppStatusBadge
@@ -129,12 +132,19 @@ class AdminDashboardScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Panel de Administración", fontWeight = FontWeight.Bold) },
+                AppTopBar(
+                    expandedHeight = 44.dp,
+                    title = {
+                        Text(
+                            "Panel de Administración",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = AppColors.TextPrimary,
+                        )
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppColors.Primary,
-                        titleContentColor = Color.White,
-                        actionIconContentColor = Color.White,
+                        containerColor = AppColors.Surface,
+                        titleContentColor = AppColors.TextPrimary,
+                        actionIconContentColor = AppColors.TextSecondary,
                     ),
                     actions = {
                         SyncIndicator()
@@ -177,13 +187,14 @@ class AdminDashboardScreen : Screen {
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = 24.dp),
             ) {
-                HeroHeader(
-                    name = authState.user?.name,
-                    activeOrders = stats?.activeOrders,
-                )
-
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Spacer(modifier = Modifier.height(20.dp))
+                    GreetingHeader(
+                        name = authState.user?.name,
+                        activeOrders = stats?.activeOrders,
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
                     SectionTitle("Resumen de Operaciones")
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -267,39 +278,42 @@ private fun RotatingRefreshButton(isLoading: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Header con gradiente (Primary -> Secondary) y saludo personalizado —
- * reemplaza el bloque plano "Resumen de Operaciones" como primer elemento
- * de la pantalla, dándole al dashboard una identidad visual propia en vez
- * de arrancar directo con texto sobre fondo blanco.
+ * Encabezado plano (sin degradado): avatar circular con inicial + saludo,
+ * directamente sobre el fondo neutro de la pantalla — estilo "data-dense
+ * dashboard" en vez de banner de marca a todo lo ancho.
  */
 @Composable
-private fun HeroHeader(name: String?, activeOrders: Int?) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(AppColors.Primary, AppColors.PrimaryLight, AppColors.SecondaryDark),
-                ),
+private fun GreetingHeader(name: String?, activeOrders: Int?) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(AppColors.Secondary.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = (name?.trim()?.firstOrNull() ?: 'A').uppercase(),
+                style = MaterialTheme.typography.titleLarge,
+                color = AppColors.Secondary,
             )
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-    ) {
-        Text(
-            text = "¡Hola${name?.let { ", ${it.trim().substringBefore(' ')}" } ?: ""}! 👋",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = if (activeOrders != null && activeOrders > 0) {
-                "Tenés $activeOrders ${if (activeOrders == 1) "orden activa" else "órdenes activas"} hoy"
-            } else {
-                "Todo tranquilo por ahora, sin órdenes activas"
-            },
-            fontSize = 14.sp,
-            color = Color.White.copy(alpha = 0.85f),
-        )
+        }
+        Spacer(modifier = Modifier.width(14.dp))
+        Column {
+            Text(
+                text = "Hola${name?.let { ", ${it.trim().substringBefore(' ')}" } ?: ""}",
+                style = MaterialTheme.typography.headlineSmall,
+                color = AppColors.TextPrimary,
+            )
+            Text(
+                text = if (activeOrders != null && activeOrders > 0) {
+                    "Tenés $activeOrders ${if (activeOrders == 1) "orden activa" else "órdenes activas"} hoy"
+                } else {
+                    "Todo tranquilo por ahora, sin órdenes activas"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextSecondary,
+            )
+        }
     }
 }
 
@@ -371,11 +385,9 @@ private fun AnimatedStatCard(spec: StatSpec, index: Int) {
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1.4f)
-                .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp), spotColor = spec.color.copy(alpha = 0.3f))
-                .background(
-                    Brush.linearGradient(listOf(spec.color.copy(alpha = 0.14f), spec.color.copy(alpha = 0.04f))),
-                    RoundedCornerShape(16.dp),
-                )
+                .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
+                .background(AppColors.Surface, RoundedCornerShape(20.dp))
+                .border(1.dp, AppColors.SurfaceBorder, RoundedCornerShape(20.dp))
                 .padding(14.dp),
         ) {
             Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
@@ -498,19 +510,21 @@ private fun QuickActionTile(action: QuickAction, navigator: Navigator) {
             .fillMaxWidth()
             .aspectRatio(1f)
             .scale(tileScale)
-            .background(action.color.copy(alpha = 0.10f), RoundedCornerShape(16.dp))
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(18.dp))
+            .background(AppColors.Surface, RoundedCornerShape(18.dp))
+            .border(1.dp, AppColors.SurfaceBorder, RoundedCornerShape(18.dp))
             .clickable(interactionSource = interactionSource, indication = null) { action.onTap(navigator) },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(38.dp).background(action.color.copy(alpha = 0.18f), CircleShape),
+            modifier = Modifier.size(38.dp).background(action.color.copy(alpha = 0.14f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(imageVector = action.icon, contentDescription = null, tint = action.color, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.height(6.dp))
-        Text(action.label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = AppColors.TextPrimary)
+        Text(action.label, style = MaterialTheme.typography.labelMedium, color = AppColors.TextPrimary)
     }
 }
 

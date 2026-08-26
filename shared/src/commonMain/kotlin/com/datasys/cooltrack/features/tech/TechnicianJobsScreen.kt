@@ -17,7 +17,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppStatusBadge
 import com.datasys.cooltrack.ui.components.SyncIndicator
@@ -47,7 +49,8 @@ class TechnicianJobsScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Mis Trabajos") },
                     actions = {
                         SyncIndicator()
@@ -63,7 +66,11 @@ class TechnicianJobsScreen : Screen {
                 val list = jobs ?: emptyList()
                 if (list.isEmpty()) {
                     Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                        Text("No tienes trabajos asignados")
+                        AppEmptyState(
+                            icon = AppIcons.Build,
+                            title = "No tienes trabajos asignados",
+                            message = "Cuando el administrador te asigne una orden, aparecerá aquí.",
+                        )
                     }
                 } else {
                     LazyColumn(

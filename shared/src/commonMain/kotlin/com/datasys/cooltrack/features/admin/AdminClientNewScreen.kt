@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -86,7 +87,8 @@ class AdminClientNewScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Nuevo Cliente") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Nuevo Cliente") }) },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(

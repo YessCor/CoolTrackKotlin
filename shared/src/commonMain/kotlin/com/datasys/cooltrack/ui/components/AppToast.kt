@@ -100,7 +100,7 @@ fun AppToastHost(state: AppToastState) {
         val type = (visuals as? AppToastVisuals)?.type ?: AppToastType.INFO
         Snackbar(
             modifier = Modifier.padding(16.dp),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             containerColor = colorFor(type),
             contentColor = Color.White,
         ) {
@@ -139,7 +139,7 @@ fun AppLoadingOverlay(
                 Box(
                     modifier = Modifier
                         .wrapContentSize()
-                        .background(Color.White, RoundedCornerShape(12.dp))
+                        .background(AppColors.Surface, RoundedCornerShape(20.dp))
                         .padding(24.dp),
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

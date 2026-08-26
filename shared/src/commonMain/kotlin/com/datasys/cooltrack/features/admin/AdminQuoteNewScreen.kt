@@ -50,6 +50,7 @@ import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceCatalog
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
@@ -182,7 +183,8 @@ class AdminQuoteNewScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Nueva Cotización") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Nueva Cotización") }) },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(

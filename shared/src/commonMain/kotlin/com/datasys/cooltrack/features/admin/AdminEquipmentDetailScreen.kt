@@ -46,6 +46,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
 import com.datasys.cooltrack.models.Equipment
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppConfirmDialog
@@ -147,7 +148,8 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Detalle del Equipo") },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = AppColors.Primary,

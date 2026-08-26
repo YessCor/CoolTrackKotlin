@@ -9,6 +9,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -18,16 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.datasys.cooltrack.core.AppColors
 
 /**
@@ -63,7 +60,7 @@ fun AppInput(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (label != null) {
-            Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(text = label, style = MaterialTheme.typography.labelLarge, color = AppColors.TextPrimary)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -85,7 +82,7 @@ fun AppInput(
             modifier = fieldModifier,
             enabled = enabled,
             placeholder = if (hint != null) {
-                { Text(text = hint, color = Color(0xFFBDBDBD)) }
+                { Text(text = hint, color = AppColors.TextMuted) }
             } else null,
             isError = errorText != null,
             supportingText = if (errorText != null) {
@@ -106,12 +103,15 @@ fun AppInput(
             ),
             maxLines = maxLines,
             singleLine = maxLines == 1,
-            textStyle = TextStyle(fontSize = 16.sp),
-            shape = RoundedCornerShape(12.dp),
+            textStyle = MaterialTheme.typography.bodyLarge,
+            shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = AppColors.Secondary,
-                unfocusedBorderColor = Color(0xFFE0E0E0),
-                errorBorderColor = Color(0xFFE53935),
+                unfocusedBorderColor = AppColors.SurfaceBorder,
+                errorBorderColor = AppColors.Error,
+                focusedContainerColor = AppColors.Surface,
+                unfocusedContainerColor = AppColors.Surface,
+                cursorColor = AppColors.Secondary,
             ),
         )
     }
@@ -130,7 +130,7 @@ fun AppSearchInput(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
-        placeholder = { Text(text = hint, color = Color(0xFFBDBDBD)) },
+        placeholder = { Text(text = hint, color = AppColors.TextMuted) },
         leadingIcon = { Icon(imageVector = AppIcons.Search, contentDescription = null, tint = AppColors.TextMuted) },
         trailingIcon = if (value.isNotEmpty()) {
             {
@@ -143,13 +143,14 @@ fun AppSearchInput(
             }
         } else null,
         singleLine = true,
-        textStyle = TextStyle(fontSize = 16.sp),
-        shape = RoundedCornerShape(12.dp),
+        textStyle = MaterialTheme.typography.bodyLarge,
+        shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = AppColors.Secondary,
-            unfocusedBorderColor = Color(0xFFE0E0E0),
-            focusedContainerColor = Color(0xFFFAFAFA),
-            unfocusedContainerColor = Color(0xFFFAFAFA),
+            unfocusedBorderColor = AppColors.SurfaceBorder,
+            focusedContainerColor = AppColors.SurfaceVariant,
+            unfocusedContainerColor = AppColors.SurfaceVariant,
+            cursorColor = AppColors.Secondary,
         ),
     )
 }

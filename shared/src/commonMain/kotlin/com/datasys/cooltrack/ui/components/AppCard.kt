@@ -1,5 +1,6 @@
 package com.datasys.cooltrack.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,22 +16,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.datasys.cooltrack.core.AppColors
 
 /**
- * Equivalente a AppCard en components/card.dart. `elevation` acepta `null`
- * para dejar que Material3 use su valor por defecto, igual que el
- * `Card(elevation: elevation)` original.
+ * Equivalente a AppCard en components/card.dart. Por defecto trae una
+ * elevación suave + borde de 1dp (en vez del plano `elevation = 0` original)
+ * para que las tarjetas se separen visualmente del fondo sin verse pesadas.
  */
 @Composable
 fun AppCard(
@@ -38,8 +38,8 @@ fun AppCard(
     padding: PaddingValues = PaddingValues(16.dp),
     onTap: (() -> Unit)? = null,
     color: Color? = null,
-    elevation: Dp = 0.dp,
-    shape: Shape = RoundedCornerShape(12.dp),
+    elevation: Dp = 1.dp,
+    shape: Shape = RoundedCornerShape(20.dp),
     content: @Composable () -> Unit,
 ) {
     val clickableModifier = if (onTap != null) modifier.clickable { onTap() } else modifier
@@ -48,6 +48,7 @@ fun AppCard(
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = color ?: AppColors.Surface),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        border = BorderStroke(1.dp, AppColors.SurfaceBorder),
     ) {
         Column(modifier = Modifier.padding(padding)) { content() }
     }
@@ -59,9 +60,9 @@ fun AppCardSkeleton(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp = 80.dp,
-    shape: Shape = RoundedCornerShape(12.dp),
+    shape: Shape = RoundedCornerShape(16.dp),
 ) {
-    var boxModifier = modifier.height(height).background(color = Color(0xFFE0E0E0), shape = shape)
+    var boxModifier = modifier.height(height).background(color = AppColors.SurfaceVariant, shape = shape)
     boxModifier = if (width != null) boxModifier.width(width) else boxModifier.fillMaxWidth()
     Box(modifier = boxModifier)
 }
@@ -87,10 +88,10 @@ fun AppListTile(
             Spacer(modifier = Modifier.width(16.dp))
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = subtitle, fontSize = 14.sp, color = AppColors.TextSecondary)
+                Text(text = subtitle, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary)
             }
         }
         if (trailing != null) trailing()

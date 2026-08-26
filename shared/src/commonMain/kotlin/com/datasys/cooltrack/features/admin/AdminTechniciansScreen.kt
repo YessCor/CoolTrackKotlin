@@ -37,6 +37,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.User
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import org.koin.compose.koinInject
@@ -59,7 +60,8 @@ class AdminTechniciansScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Técnicos") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Técnicos") }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { navigator.push(AdminCreateTechnicianScreen()) }) {
                     Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo técnico")

@@ -39,6 +39,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
 import com.datasys.cooltrack.models.Client
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
@@ -121,7 +122,8 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Nuevo Equipo") },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = AppColors.Primary,

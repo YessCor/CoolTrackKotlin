@@ -15,6 +15,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppStatusBadge
@@ -45,7 +46,8 @@ class ClientOrdersScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Mis Servicios") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Mis Servicios") }) },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navigator.push(ClientRequestServiceScreen()) },

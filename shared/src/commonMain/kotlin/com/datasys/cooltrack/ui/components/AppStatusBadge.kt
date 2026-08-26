@@ -10,27 +10,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
 import com.datasys.cooltrack.core.QuoteStatus
 
-private fun orderStatusColor(status: OrderStatus): Color = when (status) {
-    OrderStatus.PENDING -> Color(0xFFFF9800) // Colors.orange
-    OrderStatus.ASSIGNED -> Color(0xFF2196F3) // Colors.blue
-    OrderStatus.ACCEPTED -> Color(0xFF00BCD4) // Colors.cyan
-    OrderStatus.IN_TRANSIT -> Color(0xFF9C27B0) // Colors.purple
-    OrderStatus.IN_PROGRESS -> Color(0xFF3F51B5) // Colors.indigo
-    OrderStatus.COMPLETED -> Color(0xFF4CAF50) // Colors.green
-    OrderStatus.CANCELLED -> Color(0xFFF44336) // Colors.red
-}
+private fun orderStatusColor(status: OrderStatus): Color = AppColors.forOrderStatus(status)
 
 private fun orderStatusIcon(status: OrderStatus): ImageVector = when (status) {
     OrderStatus.PENDING -> AppIcons.HourglassEmpty
@@ -50,11 +42,12 @@ private fun orderStatusIcon(status: OrderStatus): ImageVector = when (status) {
 @Composable
 fun AppStatusBadge(status: OrderStatus, large: Boolean = false, modifier: Modifier = Modifier) {
     val color = orderStatusColor(status)
+    val pill = RoundedCornerShape(50)
     Row(
         modifier = modifier
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(if (large) 12.dp else 8.dp))
-            .border(BorderStroke(1.dp, color.copy(alpha = 0.3f)), RoundedCornerShape(if (large) 12.dp else 8.dp))
-            .padding(horizontal = if (large) 16.dp else 10.dp, vertical = if (large) 8.dp else 4.dp),
+            .background(color.copy(alpha = 0.12f), pill)
+            .border(BorderStroke(1.dp, color.copy(alpha = 0.35f)), pill)
+            .padding(horizontal = if (large) 16.dp else 10.dp, vertical = if (large) 8.dp else 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -67,19 +60,12 @@ fun AppStatusBadge(status: OrderStatus, large: Boolean = false, modifier: Modifi
         Text(
             text = status.label,
             color = color,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = if (large) 14.sp else 12.sp,
+            style = if (large) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
         )
     }
 }
 
-private fun quoteStatusColor(status: QuoteStatus): Color = when (status) {
-    QuoteStatus.DRAFT -> Color(0xFF9E9E9E) // Colors.grey
-    QuoteStatus.SENT -> Color(0xFF2196F3) // Colors.blue
-    QuoteStatus.APPROVED -> Color(0xFF4CAF50) // Colors.green
-    QuoteStatus.REJECTED -> Color(0xFFF44336) // Colors.red
-    QuoteStatus.EXPIRED -> Color(0xFFFF9800) // Colors.orange
-}
+private fun quoteStatusColor(status: QuoteStatus): Color = AppColors.forQuoteStatus(status)
 
 private fun quoteStatusIcon(status: QuoteStatus): ImageVector = when (status) {
     QuoteStatus.DRAFT -> AppIcons.Edit
@@ -93,11 +79,12 @@ private fun quoteStatusIcon(status: QuoteStatus): ImageVector = when (status) {
 @Composable
 fun AppQuoteStatusBadge(status: QuoteStatus, large: Boolean = false, modifier: Modifier = Modifier) {
     val color = quoteStatusColor(status)
+    val pill = RoundedCornerShape(50)
     Row(
         modifier = modifier
-            .background(color.copy(alpha = 0.1f), RoundedCornerShape(if (large) 12.dp else 8.dp))
-            .border(BorderStroke(1.dp, color.copy(alpha = 0.3f)), RoundedCornerShape(if (large) 12.dp else 8.dp))
-            .padding(horizontal = if (large) 16.dp else 10.dp, vertical = if (large) 8.dp else 4.dp),
+            .background(color.copy(alpha = 0.12f), pill)
+            .border(BorderStroke(1.dp, color.copy(alpha = 0.35f)), pill)
+            .padding(horizontal = if (large) 16.dp else 10.dp, vertical = if (large) 8.dp else 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -110,8 +97,7 @@ fun AppQuoteStatusBadge(status: QuoteStatus, large: Boolean = false, modifier: M
         Text(
             text = status.label,
             color = color,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = if (large) 14.sp else 12.sp,
+            style = if (large) MaterialTheme.typography.labelLarge else MaterialTheme.typography.labelMedium,
         )
     }
 }

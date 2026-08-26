@@ -12,6 +12,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.*
 import com.datasys.cooltrack.util.collectAsStateSimple
 import kotlinx.coroutines.launch
@@ -44,7 +45,8 @@ class ClientRequestServiceScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Solicitar Servicio") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {

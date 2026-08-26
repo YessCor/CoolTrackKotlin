@@ -1,26 +1,27 @@
   package com.datasys.cooltrack.features.auth
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -36,9 +37,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -48,6 +50,7 @@ import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.features.admin.AdminShellScreen
 import com.datasys.cooltrack.features.client.ClientShellScreen
 import com.datasys.cooltrack.features.tech.TechnicianShellScreen
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -88,93 +91,143 @@ class LoginScreen : Screen {
         val passwordError = submitted && password.isBlank()
 
         Scaffold(
+            containerColor = AppColors.SurfaceVariant,
             snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(24.dp)
+                    .padding(bottom = padding.calculateBottomPadding())
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.AcUnit,
-                    contentDescription = null,
-                    tint = AppColors.Secondary,
-                    modifier = Modifier.height(80.dp),
-                )
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    "CoolTrack",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = AppColors.Primary,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "HVAC Maintenance System",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AppColors.TextSecondary,
-                )
-                Spacer(Modifier.height(48.dp))
+                // --- Header de marca: gradiente frío + ícono en badge circular ---
+                // El fondo arranca en y=0 (detrás de la barra de estado) y el
+                // padding de status bar se aplica solo al contenido interno,
+                // para que el degradado se vea continuo edge-to-edge.
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(AppColors.PrimaryDark, AppColors.Primary),
+                            ),
+                        )
+                        .statusBarsPadding()
+                        .padding(top = 24.dp, bottom = 40.dp, start = 24.dp, end = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(84.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(AppColors.Secondary, AppColors.Accent),
+                                ),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AcUnit,
+                            contentDescription = null,
+                            tint = androidx.compose.ui.graphics.Color.White,
+                            modifier = Modifier.size(44.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    Text(
+                        "CoolTrack",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = androidx.compose.ui.graphics.Color.White,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Sistema de mantenimiento HVAC",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
+                    )
+                }
 
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Correo electrónico") },
-                    leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
-                    isError = emailError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(16.dp))
+                // --- Tarjeta de formulario, superpuesta sobre el fondo neutro ---
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(AppColors.SurfaceVariant, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                        .padding(24.dp),
+                ) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Inicia sesión",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = AppColors.TextPrimary,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Ingresa tus credenciales para continuar",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AppColors.TextSecondary,
+                    )
+                    Spacer(Modifier.height(28.dp))
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = { Text("Contraseña") },
-                    leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
-                    isError = passwordError,
-                    visualTransformation = if (obscurePassword) PasswordVisualTransformation() else VisualTransformation.None,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        TextButton(onClick = { obscurePassword = !obscurePassword }) {
-                            Text(if (obscurePassword) "Ver" else "Ocultar")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
+                    AppInput(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = "Correo electrónico",
+                        hint = "tu@correo.com",
+                        prefixIcon = AppIcons.Email,
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                        errorText = if (emailError) "El correo es requerido" else null,
+                    )
+                    Spacer(Modifier.height(16.dp))
 
-                TextButton(
-                    onClick = { navigator.push(ForgotPasswordScreen()) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) { Text("¿Olvidaste tu contraseña?") }
+                    AppInput(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "Contraseña",
+                        hint = "••••••••",
+                        prefixIcon = AppIcons.Lock,
+                        obscureText = obscurePassword,
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                        errorText = if (passwordError) "La contraseña es requerida" else null,
+                        suffix = {
+                            TextButton(onClick = { obscurePassword = !obscurePassword }) {
+                                Text(
+                                    if (obscurePassword) "Ver" else "Ocultar",
+                                    color = AppColors.Secondary,
+                                )
+                            }
+                        },
+                    )
+                    Spacer(Modifier.height(4.dp))
 
-                Spacer(Modifier.height(16.dp))
+                    TextButton(
+                        onClick = { navigator.push(ForgotPasswordScreen()) },
+                        modifier = Modifier.align(Alignment.End),
+                    ) { Text("¿Olvidaste tu contraseña?", color = AppColors.Secondary) }
 
-                Button(
-                    onClick = {
-                        submitted = true
-                        if (email.isNotBlank() && password.isNotBlank()) {
-                            scope.launch {
-                                val success = authRepository.login(email.trim(), password)
-                                if (!success) {
-                                    val error = authRepository.state.value.error ?: "Error de inicio de sesión"
-                                    snackbarHostState.showSnackbar(error)
+                    Spacer(Modifier.height(12.dp))
+
+                    AppButton(
+                        label = if (authState.isLoading) "Ingresando..." else "Iniciar sesión",
+                        isLoading = authState.isLoading,
+                        isFullWidth = true,
+                        height = 54.dp,
+                        onPressed = {
+                            submitted = true
+                            if (email.isNotBlank() && password.isNotBlank()) {
+                                scope.launch {
+                                    val success = authRepository.login(email.trim(), password)
+                                    if (!success) {
+                                        val error = authRepository.state.value.error ?: "Error de inicio de sesión"
+                                        snackbarHostState.showSnackbar(error)
+                                    }
                                 }
                             }
-                        }
-                    },
-                    enabled = !authState.isLoading,
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                ) {
-                    if (authState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.height(20.dp))
-                    } else {
-                        Text("Iniciar sesión")
-                    }
+                        },
+                    )
+                    Spacer(Modifier.height(24.dp))
                 }
             }
         }
@@ -211,7 +264,8 @@ class ForgotPasswordScreen : Screen {
 
         Scaffold(
             topBar = {
-                TopAppBar(
+                AppTopBar(
+                    expandedHeight = 44.dp,
                     title = { Text("Recuperar contraseña") },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {

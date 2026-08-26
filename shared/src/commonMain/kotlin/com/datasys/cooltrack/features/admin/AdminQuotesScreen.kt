@@ -39,6 +39,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.models.Quote
+import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import org.koin.compose.koinInject
@@ -68,7 +69,8 @@ class AdminQuotesScreen : Screen {
         }
 
         Scaffold(
-            topBar = { TopAppBar(title = { Text("Cotizaciones") }) },
+            topBar = { AppTopBar(
+                    expandedHeight = 44.dp,title = { Text("Cotizaciones") }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { navigator.push(AdminQuoteNewScreen()) }) {
                     Icon(imageVector = AppIcons.Add, contentDescription = "Nueva cotización")
