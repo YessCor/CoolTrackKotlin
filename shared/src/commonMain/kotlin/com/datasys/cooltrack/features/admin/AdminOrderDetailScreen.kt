@@ -45,6 +45,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
+import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
 import com.datasys.cooltrack.services.PdfContentBuilder
@@ -56,6 +57,7 @@ import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppModal
+import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
@@ -94,12 +96,14 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
 
         var order by remember { mutableStateOf<ServiceOrder?>(null) }
         var technicians by remember { mutableStateOf<List<User>>(emptyList()) }
+        var quotes by remember { mutableStateOf<List<Quote>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
         var isUpdating by remember { mutableStateOf(false) }
         var showAssignSheet by remember { mutableStateOf(false) }
 
         suspend fun loadOrder() {
             order = adminRepository.getOrderDetail(orderId)
+            quotes = adminRepository.getQuotesForOrder(orderId)
         }
 
         LaunchedEffect(orderId) {
@@ -264,6 +268,58 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                         Text("Descripción:", color = AppColors.TextMuted, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(current.description)
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Sección de Cotizaciones
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Cotizaciones", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        AppButton(
+                            label = "Nueva",
+                            onPressed = {
+                                navigator.push(AdminQuoteNewScreen(initialClientId = current.clientId, initialOrderId = current.id))
+                            },
+                            variant = AppButtonVariant.TEXT,
+                            height = 36.dp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (quotes.isEmpty()) {
+                        Text(
+                            "No hay cotizaciones para esta orden",
+                            color = AppColors.TextMuted,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    } else {
+                        quotes.forEach { quote ->
+                            AppCard(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) }
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "Total: $${quote.total}",
+                                            color = AppColors.Primary,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    AppQuoteStatusBadge(quote.status)
+                                }
+                            }
+                        }
                     }
 
                     if (current.status == OrderStatus.PENDING) {

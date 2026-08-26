@@ -2,6 +2,8 @@ package com.datasys.cooltrack.features.client
 
 import com.datasys.cooltrack.core.secureInsert
 import com.datasys.cooltrack.core.secureUpdate
+import com.datasys.cooltrack.core.QuoteStatus
+import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
@@ -43,6 +45,24 @@ class ClientRepository(private val supabase: SupabaseClient) {
                 feedback?.let { put("client_feedback", it) }
             },
             match = mapOf("id" to JsonPrimitive(orderId)),
+        )
+    }
+
+    /** Obtener cotizaciones del cliente para una orden específica. */
+    suspend fun getQuotesForOrder(orderId: String): List<Quote> =
+        supabase.from("quotes")
+            .select(Columns.ALL) {
+                filter { eq("order_id", orderId) }
+                order("created_at", order = io.github.jan.supabase.postgrest.query.Order.DESCENDING)
+            }
+            .decodeList()
+
+    /** Aceptar o Rechazar cotización. */
+    suspend fun updateQuoteStatus(quoteId: String, status: QuoteStatus) {
+        supabase.secureUpdate(
+            "quotes",
+            buildJsonObject { put("status", status.value) },
+            match = mapOf("id" to JsonPrimitive(quoteId)),
         )
     }
 

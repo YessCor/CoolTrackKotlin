@@ -278,4 +278,13 @@ class AdminRepository(private val supabase: SupabaseClient) {
     } catch (e: Exception) {
         null
     }
+
+    /** Obtener cotizaciones vinculadas a una orden específica. */
+    suspend fun getQuotesForOrder(orderId: String): List<Quote> =
+        supabase.from("quotes")
+            .select(Columns.ALL) {
+                filter { eq("order_id", orderId) }
+                order("created_at", order = Order.DESCENDING)
+            }
+            .decodeList()
 }

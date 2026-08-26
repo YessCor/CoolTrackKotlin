@@ -41,7 +41,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
@@ -67,6 +69,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
         val scope = rememberCoroutineScope()
 
         var order by remember { mutableStateOf<ServiceOrder?>(null) }
+        var quotes by remember { mutableStateOf<List<Quote>>(emptyList()) }
         var isLoading by remember { mutableStateOf(true) }
         var rating by remember { mutableIntStateOf(0) }
         var feedback by remember { mutableStateOf("") }
@@ -74,6 +77,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 
         LaunchedEffect(orderId) {
             order = clientRepository.getOrderDetail(orderId)
+            quotes = clientRepository.getQuotesForOrder(orderId)
             isLoading = false
         }
 
@@ -143,6 +147,33 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(currentOrder.description)
                                 }
+                            }
+                        }
+
+                        // Cotizaciones
+                        if (quotes.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Cotizaciones", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            quotes.forEach { quote ->
+                                QuoteCard(
+                                    quote = quote,
+                                    onAccept = {
+                                        scope.launch {
+                                            clientRepository.updateQuoteStatus(quote.id, QuoteStatus.APPROVED)
+                                            quotes = clientRepository.getQuotesForOrder(orderId)
+                                            toastState.showSuccess("Cotización aceptada")
+                                        }
+                                    },
+                                    onReject = {
+                                        scope.launch {
+                                            clientRepository.updateQuoteStatus(quote.id, QuoteStatus.REJECTED)
+                                            quotes = clientRepository.getQuotesForOrder(orderId)
+                                            toastState.showSuccess("Cotización rechazada")
+                                        }
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
 
@@ -286,6 +317,28 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuoteCard(quote: Quote, onAccept: () -> Unit, onReject: () -> Unit) {
+    AppCard {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
+                com.datasys.cooltrack.ui.components.AppQuoteStatusBadge(quote.status)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Total: ${quote.formattedTotal}", fontWeight = FontWeight.SemiBold, color = AppColors.Primary)
+            
+            if (quote.status == QuoteStatus.SENT) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppButton(label = "Aceptar", onPressed = onAccept, modifier = Modifier.weight(1f))
+                    AppButton(label = "Rechazar", onPressed = onReject, variant = AppButtonVariant.OUTLINE, modifier = Modifier.weight(1f))
                 }
             }
         }

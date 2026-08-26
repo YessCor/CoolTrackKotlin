@@ -101,7 +101,10 @@ private class QuoteItemRowState {
  * pantalla no pasa por el backend REST como la mayoría de las de admin).
  */
 @OptIn(ExperimentalMaterial3Api::class)
-class AdminQuoteNewScreen : Screen {
+class AdminQuoteNewScreen(
+    private val initialClientId: String? = null,
+    private val initialOrderId: String? = null
+) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -114,8 +117,8 @@ class AdminQuoteNewScreen : Screen {
         var catalog by remember { mutableStateOf<List<ServiceCatalog>?>(null) }
         var orders by remember { mutableStateOf<List<ServiceOrder>?>(null) }
 
-        var selectedClientId by remember { mutableStateOf<String?>(null) }
-        var selectedOrderId by remember { mutableStateOf<String?>(null) }
+        var selectedClientId by remember { mutableStateOf(initialClientId) }
+        var selectedOrderId by remember { mutableStateOf(initialOrderId) }
         var clientError by remember { mutableStateOf<String?>(null) }
         var notes by remember { mutableStateOf("") }
         var isSaving by remember { mutableStateOf(false) }

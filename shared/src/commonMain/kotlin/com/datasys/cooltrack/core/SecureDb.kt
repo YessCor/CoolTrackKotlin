@@ -1,6 +1,7 @@
 package com.datasys.cooltrack.core
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.functions.functions
 import io.ktor.client.request.header
 import io.ktor.client.request.setBody
@@ -32,6 +33,12 @@ internal val secureDbJson: Json = Json { ignoreUnknownKeys = true }
  */
 @PublishedApi
 internal suspend fun SupabaseClient.callSecureDb(payload: JsonObject): JsonElement {
+    // DEBUG BYPASS: Si el id es mock, no llamar a la función
+    val userId = this.auth.currentUserOrNull()?.id
+    if (userId?.startsWith("mock-") == true) {
+        return JsonNull
+    }
+
     val response = functions.invoke("secure-db") {
         header(HttpHeaders.ContentType, "application/json")
         setBody(payload.toString())
