@@ -43,6 +43,16 @@ class ClientRequestServiceScreen : Screen {
         var selectedEquipmentId by remember { mutableStateOf<String?>(null) }
         var showEquipmentDropdown by remember { mutableStateOf(false) }
 
+        LaunchedEffect(user?.id) {
+            user?.id?.let { id ->
+                try {
+                    equipmentList = clientRepository.getMyEquipment(id)
+                } catch (e: Exception) {
+                    // fallar silencioso, el dropdown mostrará vacío o general
+                }
+            }
+        }
+
         Scaffold(
             topBar = {
                 AppTopBar(

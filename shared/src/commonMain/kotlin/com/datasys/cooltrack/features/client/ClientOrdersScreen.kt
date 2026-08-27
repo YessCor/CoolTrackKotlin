@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -86,11 +87,26 @@ class ClientOrdersScreen : Screen {
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(order.serviceType, style = MaterialTheme.typography.bodyMedium)
-                                    Text(
-                                        order.createdAt.toString().split("T")[0],
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = AppColors.TextMuted
-                                    )
+                                    
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Bottom
+                                    ) {
+                                        Text(
+                                            order.createdAt.toString().split("T")[0],
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = AppColors.TextMuted
+                                        )
+                                        if (order.totalAmount != null) {
+                                            Text(
+                                                "$" + (kotlin.math.round(order.totalAmount!! * 100) / 100.0).toString(),
+                                                fontWeight = FontWeight.Bold,
+                                                color = AppColors.Primary,
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

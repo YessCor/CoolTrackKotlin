@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,6 +48,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.models.ServiceCatalog
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
@@ -57,6 +59,7 @@ import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.notifications.NotificationRepository
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -111,11 +114,13 @@ class AdminQuoteNewScreen(
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
         val adminRepository: AdminRepository = koinInject()
+        val notificationRepository: NotificationRepository = koinInject()
         val supabase: SupabaseClient = koinInject()
 
         var clients by remember { mutableStateOf<List<User>?>(null) }
         var catalog by remember { mutableStateOf<List<ServiceCatalog>?>(null) }
         var orders by remember { mutableStateOf<List<ServiceOrder>?>(null) }
+        var linkedEquipment by remember { mutableStateOf<Equipment?>(null) }
 
         var selectedClientId by remember { mutableStateOf(initialClientId) }
         var selectedOrderId by remember { mutableStateOf(initialOrderId) }
@@ -129,6 +134,16 @@ class AdminQuoteNewScreen(
             clients = try { adminRepository.getActiveClients() } catch (e: Exception) { emptyList() }
             catalog = try { adminRepository.getServiceCatalog() } catch (e: Exception) { emptyList() }
             orders = try { adminRepository.getRecentOrders() } catch (e: Exception) { emptyList() }
+        }
+
+        LaunchedEffect(selectedOrderId) {
+            linkedEquipment = null
+            selectedOrderId?.let { orderId ->
+                val order = orders?.find { it.id == orderId } ?: try { adminRepository.getOrderDetail(orderId) } catch (e: Exception) { null }
+                order?.equipmentId?.let { eqId ->
+                    linkedEquipment = try { adminRepository.getEquipmentById(eqId) } catch (e: Exception) { null }
+                }
+            }
         }
 
         val subtotal = items.sumOf { it.total }
@@ -173,6 +188,17 @@ class AdminQuoteNewScreen(
                             put("total", item.total)
                         }
                         supabase.secureInsert<JsonObject>("quote_items", itemJson)
+                    }
+
+                    // Notificar al cliente
+                    selectedClientId?.let { clientId ->
+                        notificationRepository.sendNotification(
+                            userId = clientId,
+                            title = "Nueva Cotización Recibida",
+                            message = "Has recibido una nueva cotización para tu servicio. Por favor revísala para proceder.",
+                            orderId = selectedOrderId,
+                            type = "quote"
+                        )
                     }
 
                     toastState.showSuccess("Cotización creada y enviada")
@@ -259,6 +285,28 @@ class AdminQuoteNewScreen(
                                             text = { Text("Orden #${o.orderNumber}") },
                                             onClick = { selectedOrderId = o.id; orderExpanded = false },
                                         )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Resumen del Equipo vinculado (para precisión en la cotización)
+                        linkedEquipment?.let { eq ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = AppColors.Secondary.copy(alpha = 0.1f)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text("Equipo: ${eq.name}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                        Text("${eq.brand} ${eq.model} - ${eq.typeLabel} (${eq.capacityTons} Ton)", fontSize = 12.sp)
+                                        if (!eq.notes.isNullOrBlank()) {
+                                            Text("Nota: ${eq.notes}", fontSize = 11.sp, color = AppColors.TextSecondary)
+                                        }
                                     }
                                 }
                             }

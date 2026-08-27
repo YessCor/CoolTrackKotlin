@@ -51,7 +51,9 @@ import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
 import com.datasys.cooltrack.core.technicianNextStatus
 import com.datasys.cooltrack.features.admin.AdminRepository
+import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.models.ServiceOrder
+import com.datasys.cooltrack.notifications.NotificationRepository
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -72,18 +74,26 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val techRepository: TechRepository = koinInject()
         val adminRepository: AdminRepository = koinInject()
+        val notificationRepository: NotificationRepository = koinInject()
         val syncService: com.datasys.cooltrack.services.SyncService = koinInject()
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
 
         var order by remember { mutableStateOf<ServiceOrder?>(null) }
+        var equipment by remember { mutableStateOf<Equipment?>(null) }
         var isLoading by remember { mutableStateOf(true) }
         var notes by remember { mutableStateOf("") }
         var isSavingNotes by remember { mutableStateOf(false) }
 
         LaunchedEffect(orderId) {
-            order = adminRepository.getOrderDetail(orderId)
-            order?.let { notes = it.technicianNotes ?: "" }
+            val fetchedOrder = adminRepository.getOrderDetail(orderId)
+            order = fetchedOrder
+            fetchedOrder?.let { 
+                notes = it.technicianNotes ?: "" 
+                it.equipmentId?.let { eqId ->
+                    equipment = adminRepository.getEquipmentById(eqId)
+                }
+            }
             isLoading = false
         }
 
@@ -148,6 +158,34 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
+
+                        // Detalles del Equipo
+                        equipment?.let { eq ->
+                            Text("Información del Equipo", fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            AppCard {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(24.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(eq.name, fontWeight = FontWeight.Bold)
+                                            Text("${eq.brand ?: ""} ${eq.model ?: ""}", style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                    }
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                                    Text("Tipo: ${eq.typeLabel}", fontSize = 13.sp)
+                                    Text("S/N: ${eq.serialNumber ?: "N/A"}", fontSize = 13.sp)
+                                    eq.capacityTons?.let { Text("Capacidad: $it Ton", fontSize = 13.sp) }
+                                    if (!eq.notes.isNullOrBlank()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("Notas del Cliente sobre el Equipo:", color = AppColors.TextMuted, fontSize = 11.sp)
+                                        Text(eq.notes!!, fontSize = 13.sp, color = AppColors.Primary)
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
 
                         // Notas del técnico
                         Text("Notas del trabajo", fontWeight = FontWeight.SemiBold)
@@ -359,6 +397,16 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                     scope.launch {
                                         try {
                                             techRepository.updateJobStatus(currentOrder.id, nextStatus)
+                                            
+                                            // Notificar al cliente
+                                            notificationRepository.sendNotification(
+                                                userId = currentOrder.clientId,
+                                                title = "Estado de tu servicio",
+                                                message = "El técnico ha actualizado tu servicio #${currentOrder.orderNumber} a: ${nextStatus.label}.",
+                                                orderId = currentOrder.id,
+                                                type = "order"
+                                            )
+
                                             order = adminRepository.getOrderDetail(orderId)
                                             toastState.showSuccess("Estado actualizado a ${nextStatus.label}")
                                         } catch (e: Exception) {

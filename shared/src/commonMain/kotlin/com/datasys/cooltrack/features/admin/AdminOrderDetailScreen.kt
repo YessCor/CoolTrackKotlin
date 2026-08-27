@@ -45,9 +45,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
+import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
+import com.datasys.cooltrack.notifications.NotificationRepository
 import com.datasys.cooltrack.services.PdfContentBuilder
 import com.datasys.cooltrack.services.PdfService
 import com.datasys.cooltrack.services.SyncService
@@ -91,19 +93,25 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
 
         val adminRepository: AdminRepository = koinInject()
         val authRepository: AuthRepository = koinInject()
+        val notificationRepository: NotificationRepository = koinInject()
         val syncService: SyncService = koinInject()
         val pdfService: PdfService = koinInject()
 
         var order by remember { mutableStateOf<ServiceOrder?>(null) }
         var technicians by remember { mutableStateOf<List<User>>(emptyList()) }
         var quotes by remember { mutableStateOf<List<Quote>>(emptyList()) }
+        var equipment by remember { mutableStateOf<Equipment?>(null) }
         var isLoading by remember { mutableStateOf(true) }
         var isUpdating by remember { mutableStateOf(false) }
         var showAssignSheet by remember { mutableStateOf(false) }
 
         suspend fun loadOrder() {
-            order = adminRepository.getOrderDetail(orderId)
+            val fetchedOrder = adminRepository.getOrderDetail(orderId)
+            order = fetchedOrder
             quotes = adminRepository.getQuotesForOrder(orderId)
+            fetchedOrder?.equipmentId?.let {
+                equipment = adminRepository.getEquipmentById(it)
+            }
         }
 
         LaunchedEffect(orderId) {
@@ -133,6 +141,23 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                         if (technicianId != null) "Técnico asignado" else "Estado actualizado por Admin",
                     )
                     scope.launch { syncService.syncAll() }
+
+                    // Notificar al cliente
+                    order?.clientId?.let { clientId ->
+                        val title = if (technicianId != null) "Técnico Asignado" else "Actualización de Orden"
+                        val message = if (technicianId != null) {
+                            "Se ha asignado un técnico a tu orden #${order?.orderNumber}."
+                        } else {
+                            "Tu orden #${order?.orderNumber} ha cambiado a: ${newStatus.label}."
+                        }
+                        notificationRepository.sendNotification(
+                            userId = clientId,
+                            title = title,
+                            message = message,
+                            orderId = orderId,
+                            type = "order"
+                        )
+                    }
 
                     toastState.showSuccess("Operación exitosa")
                     loadOrder()
@@ -271,6 +296,25 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+
+                    // Información del Equipo
+                    equipment?.let { eq ->
+                        AppCard {
+                            Text("Información del Equipo", fontWeight = FontWeight.Bold)
+                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+                            DetailRow("Nombre", eq.name)
+                            DetailRow("Tipo", eq.typeLabel)
+                            DetailRow("Marca/Modelo", "${eq.brand ?: ""} ${eq.model ?: ""}")
+                            DetailRow("S/N", eq.serialNumber ?: "N/A")
+                            eq.capacityTons?.let { DetailRow("Capacidad", "$it Ton") }
+                            if (!eq.notes.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Notas Técnicas del Equipo:", color = AppColors.TextMuted, fontSize = 12.sp)
+                                Text(eq.notes!!, fontSize = 13.sp)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
 
                     // Sección de Cotizaciones
                     Row(

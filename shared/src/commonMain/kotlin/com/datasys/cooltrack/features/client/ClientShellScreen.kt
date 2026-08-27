@@ -76,13 +76,15 @@ private enum class ClientTab(
     val filledIcon: androidx.compose.ui.graphics.vector.ImageVector,
     val screen: () -> Screen,
 ) {
-    ORDERS(0, "Mis Servicios", AppIcons.Orders, AppIcons.OrdersFilled, { ClientOrdersScreen() }),
-    NOTIFICATIONS(1, "Notificaciones", AppIcons.Notifications, AppIcons.NotificationsFilled, { NotificationsScreen() }),
-    LOGOUT(2, "Salir", AppIcons.Logout, AppIcons.Logout, { ClientOrdersScreen() }),
+    ORDERS(0, "Servicios", AppIcons.Orders, AppIcons.OrdersFilled, { ClientOrdersScreen() }),
+    EQUIPMENT(1, "Equipos", AppIcons.Equipment, AppIcons.EquipmentFilled, { ClientEquipmentScreen() }),
+    NOTIFICATIONS(2, "Alertas", AppIcons.Notifications, AppIcons.NotificationsFilled, { NotificationsScreen() }),
+    LOGOUT(3, "Salir", AppIcons.Logout, AppIcons.Logout, { ClientOrdersScreen() }),
 }
 
 private fun tabIndexFor(screen: Screen): Int = when (screen) {
-    is ClientOrdersScreen, is ClientRequestServiceScreen -> 0
-    is NotificationsScreen -> 1
+    is ClientOrdersScreen, is ClientRequestServiceScreen, is ClientOrderDetailScreen -> 0
+    is ClientEquipmentScreen, is ClientEquipmentNewScreen -> 1
+    is NotificationsScreen -> 2
     else -> 0
 }

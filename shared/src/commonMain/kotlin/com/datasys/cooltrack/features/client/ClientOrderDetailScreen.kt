@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,9 +42,15 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.core.QuoteStatus
+import com.datasys.cooltrack.core.OrderStatus
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
-import com.datasys.cooltrack.core.QuoteStatus
+import com.datasys.cooltrack.models.Equipment
+import com.datasys.cooltrack.models.User
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
@@ -70,14 +77,24 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 
         var order by remember { mutableStateOf<ServiceOrder?>(null) }
         var quotes by remember { mutableStateOf<List<Quote>>(emptyList()) }
+        var technician by remember { mutableStateOf<User?>(null) }
+        var equipment by remember { mutableStateOf<Equipment?>(null) }
         var isLoading by remember { mutableStateOf(true) }
         var rating by remember { mutableIntStateOf(0) }
         var feedback by remember { mutableStateOf("") }
         var isRating by remember { mutableStateOf(false) }
 
         LaunchedEffect(orderId) {
-            order = clientRepository.getOrderDetail(orderId)
+            val fetchedOrder = clientRepository.getOrderDetail(orderId)
+            order = fetchedOrder
             quotes = clientRepository.getQuotesForOrder(orderId)
+            
+            fetchedOrder?.technicianId?.let {
+                technician = clientRepository.getTechnicianById(it)
+            }
+            fetchedOrder?.equipmentId?.let {
+                equipment = clientRepository.getEquipmentById(it)
+            }
             isLoading = false
         }
 
@@ -150,6 +167,28 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                             }
                         }
 
+                        // Información del Equipo
+                        equipment?.let { eq ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            AppCard {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text("Equipo Relacionado", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(24.dp))
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text("${eq.brand} ${eq.model}", fontWeight = FontWeight.Bold)
+                                            Text("Serie: ${eq.serialNumber}", fontSize = 13.sp, color = AppColors.TextMuted)
+                                            eq.locationDescription?.let {
+                                                Text("Ubicación: $it", fontSize = 12.sp, color = AppColors.TextSecondary)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // Cotizaciones
                         if (quotes.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
@@ -158,6 +197,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                             quotes.forEach { quote ->
                                 QuoteCard(
                                     quote = quote,
+                                    onTap = { navigator.push(ClientQuoteDetailScreen(quote.id)) },
                                     onAccept = {
                                         scope.launch {
                                             clientRepository.updateQuoteStatus(quote.id, QuoteStatus.APPROVED)
@@ -202,6 +242,42 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                                 Text("Progreso", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                 Spacer(modifier = Modifier.height(12.dp))
                                 StatusTimeline(currentOrder)
+                            }
+                        }
+
+                        // Información del Técnico
+                        technician?.let { tech ->
+                            Spacer(modifier = Modifier.height(16.dp))
+                            AppCard {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text("Técnico Asignado", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier.size(40.dp).background(AppColors.SurfaceVariant, androidx.compose.foundation.shape.CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(AppIcons.Profile, contentDescription = null, tint = AppColors.Primary)
+                                        }
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Column {
+                                            Text(tech.name, fontWeight = FontWeight.Bold)
+                                            Text("Soporte Técnico Especializado", fontSize = 13.sp, color = AppColors.TextMuted)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Notas del Técnico
+                        if (!currentOrder.technicianNotes.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            AppCard {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text("Reporte del Técnico", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(currentOrder.technicianNotes!!, fontSize = 14.sp)
+                                }
                             }
                         }
 
@@ -298,24 +374,35 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                             }
                         }
 
-                        // Monto total
-                        if (currentOrder.totalAmount != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            AppCard {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-                                    Text("Total", fontWeight = FontWeight.SemiBold)
-                                    Text(
-                                        "$" + String.format("%.2f", currentOrder.totalAmount),
-                                        fontWeight = FontWeight.Bold,
-                                        color = AppColors.Primary,
-                                        fontSize = 18.sp,
-                                    )
+                        // Monto total (del pedido o de la cotización aprobada)
+                        val finalTotal = currentOrder.totalAmount ?: quotes.find { it.status == QuoteStatus.APPROVED }?.total
+                        if (finalTotal != null) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            AppCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                // Usamos un color ligeramente diferente para resaltar el total
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text("Resumen de Pago", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Total del Trabajo", fontWeight = FontWeight.Medium)
+                                        Text(
+                                            "$" + (kotlin.math.round(finalTotal * 100) / 100.0).toString(),
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = AppColors.Primary,
+                                            fontSize = 24.sp,
+                                        )
+                                    }
                                 }
                             }
                         }
+                        
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
@@ -324,8 +411,8 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 }
 
 @Composable
-private fun QuoteCard(quote: Quote, onAccept: () -> Unit, onReject: () -> Unit) {
-    AppCard {
+private fun QuoteCard(quote: Quote, onTap: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit) {
+    AppCard(onTap = onTap) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
