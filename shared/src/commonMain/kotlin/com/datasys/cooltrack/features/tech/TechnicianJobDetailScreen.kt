@@ -399,12 +399,22 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                             techRepository.updateJobStatus(currentOrder.id, nextStatus)
                                             
                                             // Notificar al cliente
+                                            val highPriority = currentOrder.priority != "normal"
                                             notificationRepository.sendNotification(
                                                 userId = currentOrder.clientId,
                                                 title = "Estado de tu servicio",
                                                 message = "El técnico ha actualizado tu servicio #${currentOrder.orderNumber} a: ${nextStatus.label}.",
                                                 orderId = currentOrder.id,
-                                                type = "order"
+                                                type = if (highPriority) "alert" else "order"
+                                            )
+
+                                            // Notificar al admin del avance de la orden
+                                            notificationRepository.notifyRole(
+                                                role = com.datasys.cooltrack.core.UserRole.ADMIN,
+                                                title = "Avance de Orden #${currentOrder.orderNumber}",
+                                                message = "El técnico ha actualizado la orden a: ${nextStatus.label}.",
+                                                orderId = currentOrder.id,
+                                                type = if (highPriority) "alert" else "order",
                                             )
 
                                             order = adminRepository.getOrderDetail(orderId)

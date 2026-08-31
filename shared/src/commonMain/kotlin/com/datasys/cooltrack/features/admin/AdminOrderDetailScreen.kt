@@ -142,8 +142,9 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                     )
                     scope.launch { syncService.syncAll() }
 
-                    // Notificar al cliente
+                    // Notificar al cliente (+ alerta si la prioridad es alta)
                     order?.clientId?.let { clientId ->
+                        val highPriority = order?.priority != null && order!!.priority != "normal"
                         val title = if (technicianId != null) "Técnico Asignado" else "Actualización de Orden"
                         val message = if (technicianId != null) {
                             "Se ha asignado un técnico a tu orden #${order?.orderNumber}."
@@ -154,6 +155,17 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                             userId = clientId,
                             title = title,
                             message = message,
+                            orderId = orderId,
+                            type = if (highPriority) "alert" else "order"
+                        )
+                    }
+
+                    // Notificar al técnico cuando se le asigna la orden
+                    if (technicianId != null && technicianId != order?.technicianId) {
+                        notificationRepository.sendNotification(
+                            userId = technicianId,
+                            title = "Nueva Orden Asignada",
+                            message = "Se te ha asignado la orden #${order?.orderNumber}. Revísala en tu lista de trabajos.",
                             orderId = orderId,
                             type = "order"
                         )

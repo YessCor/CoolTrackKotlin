@@ -15,6 +15,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
 import com.datasys.cooltrack.core.AppColors
+import com.datasys.cooltrack.features.notifications.NotificationsScreen
 import com.datasys.cooltrack.ui.components.AppIcons
 
 class AdminShellScreen : Screen {
@@ -69,6 +70,7 @@ private enum class AdminTab(
     TECHNICIANS(2, "Técnicos", AppIcons.Technicians, AppIcons.TechniciansFilled, { AdminTechniciansScreen() }),
     ORDERS(3, "Órdenes", AppIcons.Orders, AppIcons.OrdersFilled, { AdminOrdersScreen() }),
     QUOTES(4, "Cotizaciones", AppIcons.Quotes, AppIcons.QuotesFilled, { AdminQuotesScreen() }),
+    NOTIFICATIONS(5, "Notificaciones", AppIcons.Notifications, AppIcons.NotificationsFilled, { NotificationsScreen() }),
 }
 
 private fun tabIndexFor(screen: Screen): Int = when (screen) {
@@ -76,5 +78,6 @@ private fun tabIndexFor(screen: Screen): Int = when (screen) {
     is AdminTechniciansScreen, is AdminCreateTechnicianScreen -> 2
     is AdminOrdersScreen -> 3
     is AdminQuotesScreen -> 4
+    is NotificationsScreen -> 5
     else -> 0
 }

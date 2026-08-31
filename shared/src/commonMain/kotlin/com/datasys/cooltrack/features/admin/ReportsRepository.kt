@@ -1,10 +1,12 @@
 package com.datasys.cooltrack.features.admin
 
+import com.datasys.cooltrack.core.UserRole
+import com.datasys.cooltrack.core.secureSelect
+import com.datasys.cooltrack.models.User
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.postgrest.from
-import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 
 /** Equivalente a TechPerformance en reports_provider.dart. */
 data class TechPerformance(val name: String, val completedOrders: Int, val averageRating: Double)
@@ -21,13 +23,13 @@ data class ReportsData(
 /**
  * Equivalente a features/admin/providers/reports_provider.dart.
  *
- * `technicianPerformanceResponse` original usa el `select` embebido de
- * PostgREST (`users!service_orders_technician_id_fkey(name)`) para traer
- * el nombre del técnico en la misma consulta — se replica con
- * `Columns.raw(...)`, el mismo mecanismo "escape hatch" de postgrest-kt
- * para columnas/joins que no tienen un builder tipado dedicado. Si la
- * versión de postgrest-kt resuelta difiere, este es el punto más probable
- * a ajustar (ver también la nota de `AdminQuoteNewScreen.kt`).
+ * El Dart original trae el nombre del técnico con un `select` embebido de
+ * PostgREST (`users!service_orders_technician_id_fkey(name)`). Ese join se
+ * eliminó porque RLS bloquea el SELECT de la tabla `users` para usuarios
+ * `authenticated` (ver `SecureDb.kt`), lo que hacía fallar toda la consulta.
+ * Acá las órdenes completadas se leen de `service_orders` (que sí tiene
+ * política de lectura para admin) y los nombres de los técnicos se resuelven
+ * por separado vía `secure-db` (service_role).
  *
  * Nota fiel al original: `completedOrders` cuenta cuántas órdenes
  * *tienen rating* (`client_rating > 0`) por técnico, no el total de
@@ -37,14 +39,10 @@ data class ReportsData(
 class ReportsRepository(private val supabase: SupabaseClient) {
 
     @Serializable
-    private data class NestedUser(val name: String)
-
-    @Serializable
     private data class TechPerformanceRow(
         @SerialName("technician_id") val technicianId: String? = null,
         @SerialName("client_rating") val clientRating: Double? = null,
         val status: String? = null,
-        val users: NestedUser? = null,
     )
 
     @Serializable
@@ -54,21 +52,40 @@ class ReportsRepository(private val supabase: SupabaseClient) {
     )
 
     suspend fun getReports(): ReportsData {
-        val techRows = supabase.from("service_orders")
-            .select(Columns.raw("technician_id, client_rating, status, users!service_orders_technician_id_fkey(name)")) {
-                filter { eq("status", "completed") }
-            }
-            .decodeList<TechPerformanceRow>()
+        // Las lecturas de service_orders van por secure-db (service_role) y no
+        // por PostgREST directo, para no depender de que las políticas RLS de
+        // LECTURA estén aplicadas (el fix_rls_read_policies.sql). Así el
+        // informe de rendimiento funciona siempre, también para la distribución
+        // de ingresos.
+        val techRows = supabase.secureSelect<List<TechPerformanceRow>>(
+            "service_orders",
+            match = mapOf(
+                "status" to JsonPrimitive("completed"),
+            ),
+            columns = "technician_id,client_rating,status",
+        )
 
         val techRatings = mutableMapOf<String, MutableList<Double>>()
-        val techNames = mutableMapOf<String, String>()
+        val techIds = mutableSetOf<String>()
         for (row in techRows) {
             val techId = row.technicianId ?: continue
-            row.users?.name?.let { techNames[techId] = it }
+            techIds.add(techId)
             techRatings.getOrPut(techId) { mutableListOf() }
             val rating = row.clientRating ?: 0.0
             if (rating > 0) techRatings.getValue(techId).add(rating)
         }
+
+        // Los nombres de los técnicos se resuelven vía secure-db (service_role),
+        // igual que el resto de lecturas de la tabla `users`.
+        val techNames = mutableMapOf<String, String>()
+        if (techIds.isNotEmpty()) {
+            val technicians = supabase.secureSelect<List<User>>(
+                "users",
+                match = mapOf("role" to JsonPrimitive(UserRole.TECHNICIAN.value)),
+            )
+            technicians.forEach { techNames[it.id] = it.name }
+        }
+
         val performances = techRatings.map { (techId, ratings) ->
             TechPerformance(
                 name = techNames[techId] ?: "Unknown",
@@ -77,9 +94,11 @@ class ReportsRepository(private val supabase: SupabaseClient) {
             )
         }
 
-        val revenueRows = supabase.from("service_orders")
-            .select(Columns.list("service_type", "total_amount")) { filter { eq("status", "completed") } }
-            .decodeList<RevenueRow>()
+        val revenueRows = supabase.secureSelect<List<RevenueRow>>(
+            "service_orders",
+            match = mapOf("status" to JsonPrimitive("completed")),
+            columns = "service_type,total_amount",
+        )
 
         val revenueMap = mutableMapOf<String, Double>()
         for (row in revenueRows) {

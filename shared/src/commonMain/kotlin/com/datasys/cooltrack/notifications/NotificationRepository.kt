@@ -1,8 +1,11 @@
 package com.datasys.cooltrack.notifications
 
+import com.datasys.cooltrack.core.UserRole
 import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.core.secureSelect
 import com.datasys.cooltrack.core.secureUpdate
 import com.datasys.cooltrack.models.AppNotification
+import com.datasys.cooltrack.models.User
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
@@ -104,5 +107,46 @@ class NotificationRepository(
                 type?.let { put("type", it) }
             },
         )
+    }
+
+    /** IDs de los usuarios con rol administrador (para enrutar alertas al admin). */
+    suspend fun getAdminUserIds(): List<String> = try {
+        supabase.secureSelect<List<User>>(
+            "users",
+            match = mapOf("role" to JsonPrimitive(UserRole.ADMIN.value)),
+        ).mapNotNull { it.id }
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    /**
+     * Enruta una notificación a todos los usuarios con un rol concreto.
+     * Útil para alertar al admin en eventos clave sin saber su user_id de antemano.
+     */
+    suspend fun notifyRole(
+        role: UserRole,
+        title: String,
+        message: String,
+        orderId: String? = null,
+        type: String? = null,
+    ) {
+        val ids: List<String> = when (role) {
+            UserRole.ADMIN -> getAdminUserIds()
+            UserRole.TECHNICIAN, UserRole.CLIENT -> notifyRoleUserIds(role)
+        }
+        ids.forEach { userId ->
+            runCatching {
+                sendNotification(userId, title, message, orderId, type)
+            }
+        }
+    }
+
+    private suspend fun notifyRoleUserIds(role: UserRole): List<String> = try {
+        supabase.secureSelect<List<User>>(
+            "users",
+            match = mapOf("role" to JsonPrimitive(role.value)),
+        ).mapNotNull { it.id }
+    } catch (e: Exception) {
+        emptyList()
     }
 }
