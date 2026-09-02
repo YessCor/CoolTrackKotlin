@@ -13,7 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -70,13 +69,6 @@ class AdminServiceCatalogScreen : Screen {
         Scaffold(
             topBar = { AppTopBar(
                     expandedHeight = 44.dp,title = { Text("Catálogo de Servicios") }) },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { toastState.showInfo("Funcionalidad de añadir próximamente") },
-                ) {
-                    Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo servicio")
-                }
-            },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {

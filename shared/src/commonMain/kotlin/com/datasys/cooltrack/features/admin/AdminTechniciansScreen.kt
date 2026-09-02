@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -62,11 +61,6 @@ class AdminTechniciansScreen : Screen {
         Scaffold(
             topBar = { AppTopBar(
                     expandedHeight = 44.dp,title = { Text("Técnicos") }) },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { navigator.push(AdminCreateTechnicianScreen()) }) {
-                    Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo técnico")
-                }
-            },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 val list = technicians

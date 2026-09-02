@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,11 +45,11 @@ import org.koin.compose.koinInject
 
 /**
  * Equivalente a admin_quotes_screen.dart (incluye su `quotesProvider`
- * local, ahora vía `AdminRepository.getAllQuotes()` sobre Supabase). Igual que en el original, los
- * ítems de la lista no navegan a ningún detalle (no existe una
- * `admin_quote_detail_screen.dart`) — el FAB sí se conectó a
- * `AdminQuoteNewScreen`, ya que en Dart quedaba como comentario
- * `// New quote` sin implementar y la pantalla de creación sí existe.
+ * local, ahora vía `AdminRepository.getAllQuotes()` sobre Supabase).
+ *
+ * La creación de cotizaciones ya no vive acá: el FAB que abría
+ * `AdminQuoteNewScreen` se movió al menú del botón "+" del shell, que ocupa
+ * esa misma esquina.
  */
 class AdminQuotesScreen : Screen {
     @Composable
@@ -71,11 +70,6 @@ class AdminQuotesScreen : Screen {
         Scaffold(
             topBar = { AppTopBar(
                     expandedHeight = 44.dp,title = { Text("Cotizaciones") }) },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { navigator.push(AdminQuoteNewScreen()) }) {
-                    Icon(imageVector = AppIcons.Add, contentDescription = "Nueva cotización")
-                }
-            },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 val list = quotes

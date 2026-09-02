@@ -49,14 +49,6 @@ class ClientOrdersScreen : Screen {
         Scaffold(
             topBar = { AppTopBar(
                     expandedHeight = 44.dp,title = { Text("Mis Servicios") }) },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navigator.push(ClientRequestServiceScreen()) },
-                    containerColor = AppColors.Secondary
-                ) {
-                    Icon(AppIcons.Add, contentDescription = "Solicitar Servicio")
-                }
-            }
         ) { padding ->
             if (isLoading) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {

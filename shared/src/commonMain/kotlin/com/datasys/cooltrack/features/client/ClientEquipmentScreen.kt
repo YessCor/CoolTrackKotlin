@@ -57,14 +57,6 @@ class ClientEquipmentScreen : Screen {
                     title = { Text("Mis Equipos") }
                 ) 
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navigator.push(ClientEquipmentNewScreen()) },
-                    containerColor = AppColors.Secondary
-                ) {
-                    Icon(AppIcons.Add, contentDescription = "Nuevo Equipo")
-                }
-            }
         ) { padding ->
             if (isLoading) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
