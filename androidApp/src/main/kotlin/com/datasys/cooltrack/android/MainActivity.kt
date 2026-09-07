@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import com.datasys.cooltrack.auth.AuthRepository
+import com.datasys.cooltrack.core.AppSettingsStore
 import com.datasys.cooltrack.core.CooltrackTheme
 import com.datasys.cooltrack.navigation.CooltrackApp
 import org.koin.android.ext.android.inject
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             LaunchedEffect(Unit) {
+                AppSettingsStore.load()
                 authRepository.init()
             }
 

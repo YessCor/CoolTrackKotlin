@@ -11,7 +11,9 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.features.notifications.NotificationsScreen
+import com.datasys.cooltrack.features.settings.AppSettingsScreen
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppNavQuickAction
 import com.datasys.cooltrack.ui.components.AppNavTab
 import com.datasys.cooltrack.ui.components.AppShellScaffold
 import kotlinx.coroutines.launch
@@ -45,6 +47,11 @@ class TechnicianShellScreen : Screen {
                         },
                     )
                 },
+                quickActions = listOf(
+                    AppNavQuickAction("Ajustes", AppIcons.Settings) {
+                        navigator.push(AppSettingsScreen())
+                    },
+                ),
             ) { padding ->
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                     SlideTransition(navigator)

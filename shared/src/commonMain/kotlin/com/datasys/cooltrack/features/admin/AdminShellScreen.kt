@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import com.datasys.cooltrack.features.notifications.NotificationsScreen
+import com.datasys.cooltrack.features.settings.AppSettingsScreen
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppNavQuickAction
 import com.datasys.cooltrack.ui.components.AppNavTab
@@ -39,6 +40,9 @@ class AdminShellScreen : Screen {
                     },
                     AppNavQuickAction("Nuevo cliente", AppIcons.PersonAdd) {
                         navigator.push(AdminClientNewScreen())
+                    },
+                    AppNavQuickAction("Ajustes", AppIcons.Settings) {
+                        navigator.push(AppSettingsScreen())
                     },
                 ),
             ) { padding ->

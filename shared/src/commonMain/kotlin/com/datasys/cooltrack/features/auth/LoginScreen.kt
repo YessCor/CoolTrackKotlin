@@ -119,16 +119,7 @@ class LoginScreen : Screen {
                             .padding(top = 36.dp, bottom = 48.dp, start = 24.dp, end = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(88.dp)
-                                .appPop()
-                                .clip(RoundedCornerShape(26.dp))
-                                .background(Color.White.copy(alpha = 0.16f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(Icons.Filled.AcUnit, contentDescription = null, tint = Color.White, modifier = Modifier.size(46.dp))
-                        }
+                        com.datasys.cooltrack.ui.components.AppLogo(modifier = Modifier.appPop(), size = 92.dp)
                         Spacer(Modifier.height(20.dp))
                         Text(
                             "CoolTrack",

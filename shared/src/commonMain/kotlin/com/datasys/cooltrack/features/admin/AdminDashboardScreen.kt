@@ -144,6 +144,9 @@ class AdminDashboardScreen : Screen {
                                 }
                             }
                         }
+                        IconButton(onClick = { navigator.push(com.datasys.cooltrack.features.settings.AppSettingsScreen()) }) {
+                            Icon(AppIcons.Settings, contentDescription = "Ajustes", tint = Color.White)
+                        }
                         IconButton(onClick = { showLogoutDialog = true }) {
                             Icon(AppIcons.Logout, contentDescription = "Cerrar sesión", tint = Color.White)
                         }
