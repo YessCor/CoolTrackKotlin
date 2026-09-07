@@ -1,33 +1,21 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.ui.components.AppButton
+import com.datasys.cooltrack.ui.components.AppFormScaffold
 import com.datasys.cooltrack.ui.components.AppFormSection
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInfoBanner
 import com.datasys.cooltrack.ui.components.AppInput
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
-import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -87,19 +75,15 @@ class AdminCreateTechnicianScreen : Screen {
             }
         }
 
-        AppScreenScaffold(
+        AppFormScaffold(
             title = "Crear Técnico",
+            subtitle = "Perfil del técnico",
             onBack = { navigator.pop() },
+            primaryLabel = "Crear Técnico",
+            onPrimary = ::submit,
+            primaryLoading = isSaving,
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(Spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-            ) {
+        ) {
                 AppFormSection(title = "Información del técnico") {
                     AppInput(
                         value = name,
@@ -130,16 +114,6 @@ class AdminCreateTechnicianScreen : Screen {
                         "darle de alta una cuenta con este mismo correo (panel de Supabase o una función " +
                         "server-side).",
                 )
-
-                Spacer(Modifier.height(Spacing.xs))
-                AppButton(
-                    label = "Crear Técnico",
-                    icon = AppIcons.Check,
-                    onPressed = ::submit,
-                    isLoading = isSaving,
-                    isFullWidth = true,
-                )
-            }
         }
     }
 }

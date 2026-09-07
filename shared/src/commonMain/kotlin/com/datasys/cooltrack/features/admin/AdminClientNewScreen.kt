@@ -1,42 +1,27 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.ui.components.AppButton
-import com.datasys.cooltrack.ui.components.AppButtonVariant
-import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppFormScaffold
+import com.datasys.cooltrack.ui.components.AppFormSection
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppInfoBanner
 import com.datasys.cooltrack.ui.components.AppInput
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
-import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * Equivalente a admin_client_new_screen.dart. El `Form` + `GlobalKey<FormState>`
- * de Flutter se reemplaza con validación manual en `submit()`, ya que
- * `AppInput` (módulo 5a) no tiene un `FormFieldValidator` acoplado — mismo
- * criterio que el resto de las pantallas de este módulo.
+ * Alta de cliente para admin.
  */
 class AdminClientNewScreen : Screen {
     @Composable
@@ -85,21 +70,16 @@ class AdminClientNewScreen : Screen {
             }
         }
 
-        AppScreenScaffold(
+        AppFormScaffold(
             title = "Nuevo Cliente",
+            subtitle = "Datos de contacto",
             onBack = { navigator.pop() },
+            primaryLabel = "Crear Cliente",
+            onPrimary = ::submit,
+            primaryLoading = isLoading,
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(Spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-            ) {
-              AppCard {
-                Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+        ) {
+            AppFormSection(title = "Información del cliente") {
                 AppInput(
                     value = name,
                     onValueChange = { name = it },
@@ -129,18 +109,8 @@ class AdminClientNewScreen : Screen {
                     prefixIcon = AppIcons.Location,
                     maxLines = 2,
                 )
-                }
-              }
-                AppButton(
-                    label = "Crear Cliente",
-                    icon = AppIcons.Check,
-                    onPressed = ::submit,
-                    isLoading = isLoading,
-                    isFullWidth = true,
-                    variant = AppButtonVariant.PRIMARY,
-                )
-                Spacer(modifier = Modifier.height(Spacing.sm))
             }
+            AppInfoBanner("El cliente podrá iniciar sesión con este correo una vez que tenga una cuenta creada.")
         }
     }
 }

@@ -95,26 +95,20 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
             }
         }
 
-        AppScreenScaffold(
+        AppFormScaffold(
             title = if (isEditing) "Editar Equipo" else "Nuevo Equipo",
+            subtitle = if (isEditing) "Actualizá los datos" else "Registrá el equipo",
             onBack = { navigator.pop() },
-            actions = {
-                if (isEditing) {
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(AppIcons.Delete, contentDescription = "Eliminar", tint = AppColors.Error)
-                    }
+            actions = if (isEditing) ({
+                IconButton(onClick = { showDeleteDialog = true }) {
+                    Icon(AppIcons.Delete, contentDescription = "Eliminar", tint = androidx.compose.ui.graphics.Color.White)
                 }
-            },
+            }) else null,
+            primaryLabel = "Guardar equipo",
+            onPrimary = ::save,
+            primaryLoading = isSaving,
             snackbarHost = { AppToastHost(toastState) }
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(Spacing.lg)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
-            ) {
+        ) {
                 AppFormSection(title = "Datos del equipo") {
                 AppInput(
                     value = name,
@@ -170,17 +164,6 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
                         maxLines = 3
                     )
                 }
-
-                Spacer(modifier = Modifier.height(Spacing.xs))
-
-                AppButton(
-                    label = "Guardar equipo",
-                    icon = AppIcons.Check,
-                    onPressed = ::save,
-                    isLoading = isSaving,
-                    isFullWidth = true
-                )
-            }
         }
 
         if (showDeleteDialog) {

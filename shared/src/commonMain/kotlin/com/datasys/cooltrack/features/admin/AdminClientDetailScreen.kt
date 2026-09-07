@@ -49,11 +49,10 @@ import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppErrorState
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
-import com.datasys.cooltrack.ui.components.AppLoadingList
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppSectionTitle
 import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import com.datasys.cooltrack.ui.components.AppToastHost
@@ -139,7 +138,8 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             }
         }
 
-        AppScreenScaffold(
+        val c0 = client
+        AppHeroScaffold(
             title = "Detalle del Cliente",
             onBack = { navigator.pop() },
             actions = {
@@ -147,61 +147,38 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                     Icon(
                         imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
                         contentDescription = if (isEditing) "Cancelar edición" else "Editar",
+                        tint = Color.White,
                     )
                 }
             },
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
+            heroContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.18f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text((c0?.name ?: "?").take(1).uppercase(), fontSize = 24.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(c0?.name ?: "Cliente", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                        Text(c0?.email ?: "", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
+                    }
+                }
+            },
+        ) {
             if (isLoading && client == null) {
-                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
-                return@AppScreenScaffold
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { repeat(4) { AppSkeletonListCard() } }
+                return@AppHeroScaffold
             }
             val current = client
             if (current == null) {
-                AppErrorState(
-                    message = "No pudimos encontrar este cliente.",
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
-                return@AppScreenScaffold
+                AppErrorState(message = "No pudimos encontrar este cliente.", modifier = Modifier.fillMaxWidth())
+                return@AppHeroScaffold
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
-                // Header con gradiente (equivalente a LinearGradient(primary, secondary))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.linearGradient(listOf(AppColors.Primary, AppColors.Secondary)),
-                            RoundedCornerShape(16.dp),
-                        )
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(Color.White.copy(alpha = 0.2f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = current.name.take(1).uppercase(),
-                            fontSize = 32.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(current.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    Text(current.email, color = Color.White.copy(alpha = 0.8f))
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
+            Column {
                 AppSectionTitle("Información del Cliente")
                 Spacer(modifier = Modifier.height(16.dp))
 

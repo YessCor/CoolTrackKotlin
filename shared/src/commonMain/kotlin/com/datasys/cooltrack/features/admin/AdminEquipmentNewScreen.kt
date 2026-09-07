@@ -31,11 +31,10 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.EquipmentType
 import com.datasys.cooltrack.models.Client
-import com.datasys.cooltrack.ui.components.AppButton
+import com.datasys.cooltrack.ui.components.AppFormScaffold
 import com.datasys.cooltrack.ui.components.AppFormSection
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
@@ -114,19 +113,15 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
             }
         }
 
-        AppScreenScaffold(
+        AppFormScaffold(
             title = "Nuevo Equipo",
+            subtitle = "Datos del equipo",
             onBack = { navigator.pop() },
+            primaryLabel = "Crear Equipo",
+            onPrimary = ::save,
+            primaryLoading = isSaving,
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(Spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
-            ) {
+        ) {
                 AppFormSection(title = "Cliente") {
                     val clientsList = clients
                     if (clientsList == null) {
@@ -202,10 +197,6 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
                     AppInput(value = location, onValueChange = { location = it }, label = "Ubicación", maxLines = 2)
                     AppInput(value = notes, onValueChange = { notes = it }, label = "Notas", maxLines = 3)
                 }
-
-                Spacer(modifier = Modifier.height(Spacing.xs))
-                AppButton(label = "Crear Equipo", icon = AppIcons.Check, onPressed = ::save, isLoading = isSaving, isFullWidth = true)
-            }
         }
     }
 }

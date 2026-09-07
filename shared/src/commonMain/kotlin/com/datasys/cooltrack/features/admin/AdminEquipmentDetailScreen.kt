@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,11 +51,11 @@ import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppConfirmDialog
 import com.datasys.cooltrack.ui.components.AppErrorState
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
-import com.datasys.cooltrack.ui.components.AppLoadingList
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppSectionTitle
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
@@ -149,72 +150,52 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
             }
         }
 
-        AppScreenScaffold(
+        val e0 = equipment
+        AppHeroScaffold(
             title = "Detalle del Equipo",
             onBack = { navigator.pop() },
             actions = {
-                        IconButton(onClick = { isEditing = !isEditing }) {
-                            Icon(
-                                imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
-                                contentDescription = if (isEditing) "Cancelar" else "Editar",
-                            )
-                        }
-                        Box {
-                            IconButton(onClick = { showMenu = true }) {
-                                Icon(imageVector = AppIcons.More, contentDescription = "Más opciones")
-                            }
-                            DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                                DropdownMenuItem(
-                                    text = { Text("Eliminar", color = AppColors.Error) },
-                                    onClick = { showMenu = false; showDeleteDialog = true },
-                                )
-                            }
-                        }
+                IconButton(onClick = { isEditing = !isEditing }) {
+                    Icon(
+                        imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
+                        contentDescription = if (isEditing) "Cancelar" else "Editar",
+                        tint = Color.White,
+                    )
+                }
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(AppIcons.More, contentDescription = "Más opciones", tint = Color.White)
+                    }
+                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Eliminar", color = AppColors.Error) },
+                            onClick = { showMenu = false; showDeleteDialog = true },
+                        )
+                    }
+                }
             },
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
+            heroContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.18f), RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(AppIcons.Equipment, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(e0?.name ?: "Equipo", style = androidx.compose.material3.MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = Color.White)
+                        Text(e0?.typeLabel ?: "", style = androidx.compose.material3.MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.8f))
+                    }
+                }
+            },
+        ) {
             val current = equipment
             when {
-                isLoading && current == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 5)
-                current == null -> AppErrorState(
-                    message = "No pudimos encontrar este equipo.",
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
-                else -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                ) {
-                    // Header
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(AppColors.Secondary.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(AppColors.Secondary.copy(alpha = 0.2f), RoundedCornerShape(20.dp)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = AppIcons.Equipment,
-                                contentDescription = null,
-                                tint = AppColors.Secondary,
-                                modifier = Modifier.size(40.dp),
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(current.name, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(current.typeLabel, color = AppColors.TextMuted, fontSize = 16.sp)
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
+                isLoading && current == null -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { repeat(4) { AppSkeletonListCard() } }
+                current == null -> AppErrorState(message = "No pudimos encontrar este equipo.", modifier = Modifier.fillMaxWidth())
+                else -> Column {
                     AppSectionTitle("Información del Equipo")
                     Spacer(modifier = Modifier.height(12.dp))
 

@@ -42,9 +42,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppErrorState
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
-import com.datasys.cooltrack.ui.components.AppLoadingList
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import org.koin.compose.koinInject
 
 /**
@@ -73,24 +73,18 @@ class AdminReportsScreen : Screen {
             }
         }
 
-        AppScreenScaffold(
+        AppHeroScaffold(
             title = "Informes de Rendimiento",
+            subtitle = "Ingresos y técnicos",
             onBack = { navigator.pop() },
-        ) { padding ->
+        ) {
             val current = data
             when {
-                current == null && errorMessage == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 3)
-                errorMessage != null -> AppErrorState(
-                    message = errorMessage!!,
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
-                current != null -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                ) {
+                current == null && errorMessage == null -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    repeat(3) { AppSkeletonListCard() }
+                }
+                errorMessage != null -> AppErrorState(message = errorMessage!!, modifier = Modifier.fillMaxWidth())
+                current != null -> Column {
                     SectionTitle("Distribución de Ingresos por Servicio")
                     Spacer(modifier = Modifier.height(16.dp))
                     RevenuePieChart(current.revenueByService)

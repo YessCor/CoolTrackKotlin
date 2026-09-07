@@ -56,7 +56,8 @@ import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppFormScaffold
 import com.datasys.cooltrack.ui.components.AppSectionTitle
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
@@ -213,22 +214,19 @@ class AdminQuoteNewScreen(
             }
         }
 
-        AppScreenScaffold(
+        AppFormScaffold(
             title = "Nueva Cotización",
+            subtitle = "Ítems y total",
             onBack = { navigator.pop() },
+            primaryLabel = "Generar Cotización",
+            onPrimary = ::createQuote,
+            primaryLoading = isSaving,
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-            ) {
+        ) {
                 // Información general
-                Card(shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Información General", fontWeight = FontWeight.Bold)
+                AppCard {
+                    Column {
+                        AppSectionTitle("Información general")
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
                         val clientsList = clients
@@ -343,11 +341,8 @@ class AdminQuoteNewScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Totales
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = AppColors.Primary.copy(alpha = 0.05f)),
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                AppCard(color = AppColors.Secondary.copy(alpha = 0.06f)) {
+                    Column {
                         TotalRow("Subtotal", subtotal)
                         Spacer(modifier = Modifier.height(4.dp))
                         TotalRow("IVA (16%)", tax)
@@ -357,7 +352,7 @@ class AdminQuoteNewScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Notas / Términos", fontWeight = FontWeight.Bold)
+                AppSectionTitle("Notas / Términos")
                 Spacer(modifier = Modifier.height(8.dp))
                 AppInput(
                     value = notes,
@@ -365,17 +360,6 @@ class AdminQuoteNewScreen(
                     hint = "Ej: Válido por 15 días. Incluye materiales.",
                     maxLines = 3,
                 )
-
-                Spacer(modifier = Modifier.height(32.dp))
-                AppButton(
-                    label = "Generar Cotización",
-                    onPressed = ::createQuote,
-                    isLoading = isSaving,
-                    isFullWidth = true,
-                    height = 50.dp,
-                )
-                Spacer(modifier = Modifier.height(40.dp))
-            }
         }
     }
 }

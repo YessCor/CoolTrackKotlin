@@ -44,10 +44,10 @@ import com.datasys.cooltrack.models.QuoteItem
 import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppErrorState
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
-import com.datasys.cooltrack.ui.components.AppLoadingList
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import org.koin.compose.koinInject
 
 /**
@@ -74,55 +74,40 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
             }
         }
 
-        AppScreenScaffold(
+        val q0 = quote
+        AppHeroScaffold(
             title = "Detalle de Cotización",
             onBack = { navigator.pop() },
-        ) { padding ->
+            heroContent = {
+                Text("Cotización", style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "#${q0?.quoteNumber ?: "…"}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = androidx.compose.ui.graphics.Color.White,
+                )
+                if (q0 != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppQuoteStatusBadge(q0.status, large = true)
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            com.datasys.cooltrack.ui.components.formatShortDate(q0.createdAt.toString()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
+                        )
+                    }
+                }
+            },
+        ) {
             when {
-                isLoading -> AppLoadingList(modifier = Modifier.padding(padding), count = 4)
-                errorMessage != null -> AppErrorState(
-                    message = errorMessage!!,
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
-                quote == null -> AppErrorState(
-                    message = "No pudimos encontrar esta cotización.",
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
+                isLoading -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { repeat(3) { AppSkeletonListCard() } }
+                errorMessage != null -> AppErrorState(message = errorMessage!!, modifier = Modifier.fillMaxWidth())
+                quote == null -> AppErrorState(message = "No pudimos encontrar esta cotización.", modifier = Modifier.fillMaxWidth())
                 else -> {
                     val q = quote!!
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        // Header
-                        AppCard {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column {
-                                    Text(
-                                        "Cotización #${q.quoteNumber}",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        q.createdAt.toString().split("T").first(),
-                                        fontSize = 13.sp,
-                                        color = AppColors.TextMuted,
-                                    )
-                                }
-                                AppQuoteStatusBadge(q.status, large = true)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
+                    Column {
                         // Items
                         if (!q.items.isNullOrEmpty()) {
                             AppCard {

@@ -53,19 +53,41 @@ class ClientRequestServiceScreen : Screen {
             }
         }
 
-        AppScreenScaffold(
+        fun submit() {
+            if (description.isBlank() || address.isBlank()) {
+                scope.launch { toastState.showError("Por favor completa la descripción y dirección") }
+                return
+            }
+            scope.launch {
+                isSubmitting = true
+                try {
+                    clientRepository.createServiceRequest(
+                        clientId = user?.id ?: "",
+                        equipmentId = selectedEquipmentId,
+                        serviceType = selectedServiceType,
+                        description = description,
+                        address = address,
+                    )
+                    toastState.showSuccess("¡Solicitud enviada exitosamente!")
+                    navigator.pop()
+                } catch (e: Exception) {
+                    toastState.showError("Error al enviar solicitud: ${e.message}")
+                } finally {
+                    isSubmitting = false
+                }
+            }
+        }
+
+        AppFormScaffold(
             title = "Solicitar Servicio",
+            subtitle = "Contanos qué necesitás",
             onBack = { navigator.pop() },
+            primaryLabel = "Enviar solicitud",
+            primaryIcon = AppIcons.Send,
+            onPrimary = ::submit,
+            primaryLoading = isSubmitting,
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(Spacing.lg)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
-            ) {
+        ) {
                 AppFormSection(title = "Tipo de servicio requerido") {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,40 +160,6 @@ class ClientRequestServiceScreen : Screen {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(Spacing.xs))
-
-                AppButton(
-                    label = if (isSubmitting) "Enviando..." else "Enviar Solicitud de Servicio",
-                    icon = AppIcons.CheckFilled,
-                    onPressed = {
-                        if (description.isBlank() || address.isBlank()) {
-                            scope.launch { toastState.showError("Por favor completa la descripción y dirección") }
-                            return@AppButton
-                        }
-                        
-                        scope.launch {
-                            isSubmitting = true
-                            try {
-                                clientRepository.createServiceRequest(
-                                    clientId = user?.id ?: "",
-                                    equipmentId = selectedEquipmentId,
-                                    serviceType = selectedServiceType,
-                                    description = description,
-                                    address = address
-                                )
-                                toastState.showSuccess("¡Solicitud enviada exitosamente!")
-                                navigator.pop()
-                            } catch (e: Exception) {
-                                toastState.showError("Error al enviar solicitud: ${e.message}")
-                            } finally {
-                                isSubmitting = false
-                            }
-                        }
-                    },
-                    isLoading = isSubmitting,
-                    isFullWidth = true
-                )
-            }
         }
     }
 }

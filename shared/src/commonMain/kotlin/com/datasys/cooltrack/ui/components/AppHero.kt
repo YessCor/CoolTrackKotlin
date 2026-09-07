@@ -314,6 +314,71 @@ fun <T> AppListScreen(
     }
 }
 
+/**
+ * Scaffold de formulario del rediseño: hero compacto + contenido scrolleable
+ * en secciones + una barra de acción fija abajo (el botón primario siempre
+ * visible sobre un difuminado del fondo).
+ */
+@Composable
+fun AppFormScaffold(
+    title: String,
+    primaryLabel: String,
+    onPrimary: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = null,
+    actions: (@Composable RowScope.() -> Unit)? = null,
+    primaryIcon: androidx.compose.ui.graphics.vector.ImageVector? = AppIcons.Check,
+    primaryLoading: Boolean = false,
+    snackbarHost: @Composable () -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Box(modifier = modifier.fillMaxSize().background(AppColors.Background)) {
+        Column(Modifier.fillMaxSize()) {
+            AppCompactHero(title = title, subtitle = subtitle, onBack = onBack, trailing = actions)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(y = (-22).dp)
+                    .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp))
+                    .background(AppColors.Background),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 108.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    content = content,
+                )
+                // Barra de acción fija (difuminado del fondo hacia arriba).
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .background(
+                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                0f to AppColors.Background.copy(alpha = 0f),
+                                0.35f to AppColors.Background,
+                            ),
+                        )
+                        .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 16.dp),
+                ) {
+                    AppButton(
+                        label = primaryLabel,
+                        icon = primaryIcon,
+                        onPressed = onPrimary,
+                        isLoading = primaryLoading,
+                        isFullWidth = true,
+                        height = 54.dp,
+                    )
+                }
+            }
+        }
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) { snackbarHost() }
+    }
+}
+
 /** Avatar circular translúcido para el header hero (inicial o ícono). */
 @Composable
 fun AppHeroAvatar(initial: String, modifier: Modifier = Modifier, size: Dp = 52.dp) {
