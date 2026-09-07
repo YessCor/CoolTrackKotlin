@@ -1,23 +1,17 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,14 +22,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.TechnicianLocation
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLeadingIcon
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.Spacing
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -70,6 +67,7 @@ import org.koin.compose.koinInject
 class AdminTechTrackingScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val supabase: SupabaseClient = koinInject()
         val adminRepository: AdminRepository = koinInject()
 
@@ -114,45 +112,44 @@ class AdminTechTrackingScreen : Screen {
             }
         }
 
-        Scaffold(topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Rastreo de Técnicos") }) }) { padding ->
+        AppScreenScaffold(
+            title = "Rastreo de Técnicos",
+            onBack = { navigator.pop() },
+        ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 if (latestLocations.isEmpty()) {
                     AppEmptyState(
                         icon = AppIcons.Map,
                         title = "Sin técnicos en línea",
                         message = "En cuanto un técnico comparta su ubicación, va a aparecer acá.",
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 } else {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = Spacing.screen,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.md),
                     ) {
                         items(latestLocations.values.toList()) { loc ->
                             AppCard {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(AppColors.Info.copy(alpha = 0.15f), CircleShape),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(imageVector = AppIcons.Location, contentDescription = null, tint = AppColors.Info)
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    AppLeadingIcon(AppIcons.Location, tint = AppColors.Info)
+                                    Spacer(modifier = Modifier.width(Spacing.md))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             technicianNames[loc.technicianId] ?: "Técnico",
-                                            fontWeight = FontWeight.SemiBold,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleSmall,
                                         )
+                                        Spacer(Modifier.width(2.dp))
                                         Text(
                                             "Lat ${formatCoord(loc.latitude)}, Lng ${formatCoord(loc.longitude)}",
-                                            fontSize = 12.sp,
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = AppColors.TextMuted,
                                         )
                                         Text(
-                                            "Última actualización: ${formatTime(loc.recordedAt)}",
-                                            fontSize = 12.sp,
+                                            "Actualizado: ${formatTime(loc.recordedAt)}",
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = AppColors.TextMuted,
                                         )
                                     }

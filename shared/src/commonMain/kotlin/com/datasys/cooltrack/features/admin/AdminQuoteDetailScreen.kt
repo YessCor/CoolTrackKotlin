@@ -41,10 +41,13 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.QuoteItem
-import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLoadingList
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import org.koin.compose.koinInject
 
 /**
@@ -71,29 +74,20 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle de Cotización") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
-                )
-            },
+        AppScreenScaffold(
+            title = "Detalle de Cotización",
+            onBack = { navigator.pop() },
         ) { padding ->
             when {
-                isLoading -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                errorMessage != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Error: $errorMessage")
-                }
-                quote == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Cotización no encontrada")
-                }
+                isLoading -> AppLoadingList(modifier = Modifier.padding(padding), count = 4)
+                errorMessage != null -> AppErrorState(
+                    message = errorMessage!!,
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
+                quote == null -> AppErrorState(
+                    message = "No pudimos encontrar esta cotización.",
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
                 else -> {
                     val q = quote!!
                     Column(
@@ -132,7 +126,7 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
                         // Items
                         if (!q.items.isNullOrEmpty()) {
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Items", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     q.items!!.forEach { item ->
@@ -146,10 +140,10 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
 
                         // Totales
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 SummaryRow("Subtotal", q.formattedSubtotal)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                SummaryRow("IVA (${String.format("%.0f", q.taxRate * 100)}%)", q.formattedTotal)
+                                SummaryRow("IVA (${(q.taxRate * 100).toInt()}%)", q.formattedTax)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                                 SummaryRow("Total", q.formattedTotal, isBold = true)
                             }
@@ -159,7 +153,7 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
                         if (!q.notes.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Notas", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(q.notes!!)
@@ -205,13 +199,13 @@ private fun QuoteItemRow(item: QuoteItem) {
         Column(modifier = Modifier.weight(1f)) {
             Text(item.description, fontWeight = FontWeight.Medium, fontSize = 15.sp)
             Text(
-                "${item.quantity} x $${String.format("%.2f", item.unitPrice)}",
+                "${item.quantity} × ${formatMoney(item.unitPrice)}",
                 fontSize = 13.sp,
                 color = AppColors.TextMuted,
             )
         }
         Text(
-            "$${String.format("%.2f", item.total)}",
+            formatMoney(item.total),
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
         )

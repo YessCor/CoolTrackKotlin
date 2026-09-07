@@ -16,10 +16,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,22 +25,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
 import com.datasys.cooltrack.models.Client
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
+import com.datasys.cooltrack.ui.components.AppFormSection
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
+import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
@@ -120,17 +114,9 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Nuevo Equipo") },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppColors.Primary,
-                        titleContentColor = Color.White,
-                    ),
-                )
-            },
+        AppScreenScaffold(
+            title = "Nuevo Equipo",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(
@@ -138,93 +124,87 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
             ) {
-                Text("Cliente", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-
-                val clientsList = clients
-                if (clientsList == null) {
-                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                } else {
-                    var expanded by remember { mutableStateOf(false) }
-                    val selectedName = clientsList.firstOrNull { it.id == selectedClientId }?.name ?: ""
-                    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-                        OutlinedTextField(
-                            value = selectedName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Seleccionar Cliente *") },
-                            isError = clientError != null,
-                            supportingText = clientError?.let { { Text(it) } },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
-                        )
-                        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            clientsList.forEach { c ->
-                                DropdownMenuItem(
-                                    text = { Text(c.name) },
-                                    onClick = {
-                                        selectedClientId = c.id
-                                        clientError = null
-                                        expanded = false
-                                    },
-                                )
+                AppFormSection(title = "Cliente") {
+                    val clientsList = clients
+                    if (clientsList == null) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    } else {
+                        var expanded by remember { mutableStateOf(false) }
+                        val selectedName = clientsList.firstOrNull { it.id == selectedClientId }?.name ?: ""
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+                            OutlinedTextField(
+                                value = selectedName,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Seleccionar cliente *") },
+                                isError = clientError != null,
+                                supportingText = clientError?.let { { Text(it) } },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                clientsList.forEach { c ->
+                                    DropdownMenuItem(
+                                        text = { Text(c.name) },
+                                        onClick = {
+                                            selectedClientId = c.id
+                                            clientError = null
+                                            expanded = false
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-                Text("Información del Equipo", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-
-                AppInput(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = "Nombre del Equipo *",
-                    prefixIcon = AppIcons.Equipment,
-                    errorText = nameError,
-                )
-
-                var typeExpanded by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
-                    OutlinedTextField(
-                        value = selectedType.label,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Tipo de Equipo") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                AppFormSection(title = "Información del equipo") {
+                    AppInput(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Nombre del equipo *",
+                        prefixIcon = AppIcons.Equipment,
+                        errorText = nameError,
                     )
-                    ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
-                        EquipmentType.entries.forEach { type ->
-                            DropdownMenuItem(
-                                text = { Text(type.label) },
-                                onClick = { selectedType = type; typeExpanded = false },
-                            )
+
+                    var typeExpanded by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(expanded = typeExpanded, onExpandedChange = { typeExpanded = it }) {
+                        OutlinedTextField(
+                            value = selectedType.label,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Tipo de equipo") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded) },
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        )
+                        ExposedDropdownMenu(expanded = typeExpanded, onDismissRequest = { typeExpanded = false }) {
+                            EquipmentType.entries.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type.label) },
+                                    onClick = { selectedType = type; typeExpanded = false },
+                                )
+                            }
                         }
                     }
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                        AppInput(value = brand, onValueChange = { brand = it }, label = "Marca", modifier = Modifier.weight(1f))
+                        AppInput(value = model, onValueChange = { model = it }, label = "Modelo", modifier = Modifier.weight(1f))
+                    }
+                    AppInput(value = serial, onValueChange = { serial = it }, label = "Número de serie")
+                    AppInput(value = capacity, onValueChange = { capacity = it }, label = "Capacidad (toneladas)", keyboardType = KeyboardType.Number)
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        AppInput(value = brand, onValueChange = { brand = it }, label = "Marca")
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        AppInput(value = model, onValueChange = { model = it }, label = "Modelo")
-                    }
+                AppFormSection(title = "Ubicación y notas") {
+                    AppInput(value = location, onValueChange = { location = it }, label = "Ubicación", maxLines = 2)
+                    AppInput(value = notes, onValueChange = { notes = it }, label = "Notas", maxLines = 3)
                 }
 
-                AppInput(value = serial, onValueChange = { serial = it }, label = "Número de Serie")
-                AppInput(value = capacity, onValueChange = { capacity = it }, label = "Capacidad (toneladas)", keyboardType = KeyboardType.Number)
-
-                Text("Ubicación", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                AppInput(value = location, onValueChange = { location = it }, label = "Ubicación", maxLines = 2)
-
-                Text("Notas", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                AppInput(value = notes, onValueChange = { notes = it }, label = "Notas", maxLines = 3)
-
-                Spacer(modifier = Modifier.height(16.dp))
-                AppButton(label = "Crear Equipo", onPressed = ::save, isLoading = isSaving, isFullWidth = true)
+                Spacer(modifier = Modifier.height(Spacing.xs))
+                AppButton(label = "Crear Equipo", icon = AppIcons.Check, onPressed = ::save, isLoading = isSaving, isFullWidth = true)
             }
         }
     }

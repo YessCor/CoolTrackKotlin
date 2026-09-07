@@ -45,12 +45,19 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.Client
 import com.datasys.cooltrack.models.Equipment
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppEmptyState
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppLeadingIcon
+import com.datasys.cooltrack.ui.components.AppLoadingList
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSectionTitle
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import com.datasys.cooltrack.ui.components.AppToastHost
+import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -132,46 +139,30 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle del Cliente") },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppColors.Primary,
-                        titleContentColor = Color.White,
-                        actionIconContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(imageVector = AppIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { isEditing = !isEditing }) {
-                            Icon(
-                                imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
-                                contentDescription = if (isEditing) "Cancelar edición" else "Editar",
-                            )
-                        }
-                    },
-                )
+        AppScreenScaffold(
+            title = "Detalle del Cliente",
+            onBack = { navigator.pop() },
+            actions = {
+                IconButton(onClick = { isEditing = !isEditing }) {
+                    Icon(
+                        imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
+                        contentDescription = if (isEditing) "Cancelar edición" else "Editar",
+                    )
+                }
             },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             if (isLoading && client == null) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                return@Scaffold
+                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
+                return@AppScreenScaffold
             }
             val current = client
             if (current == null) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Cliente no encontrado")
-                }
-                return@Scaffold
+                AppErrorState(
+                    message = "No pudimos encontrar este cliente.",
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
+                return@AppScreenScaffold
             }
 
             Column(
@@ -211,7 +202,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Información del Cliente", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                AppSectionTitle("Información del Cliente")
                 Spacer(modifier = Modifier.height(16.dp))
 
                 AppInput(
@@ -261,50 +252,40 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text("Equipos", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(
-                        onClick = { navigator.push(AdminEquipmentNewScreen(clientId = clientId)) },
-                    ) { Text("+ Agregar") }
-                }
+                AppSectionTitle(
+                    "Equipos",
+                    trailing = {
+                        TextButton(
+                            onClick = { navigator.push(AdminEquipmentNewScreen(clientId = clientId)) },
+                        ) { Text("+ Agregar") }
+                    },
+                )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 val equipmentList = equipment
                 when {
-                    equipmentList == null -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                    equipmentList == null -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                        repeat(2) { AppSkeletonListCard() }
                     }
-                    equipmentList.isEmpty() -> Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(AppColors.SurfaceVariant, RoundedCornerShape(12.dp))
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center,
-                    ) { Text("No hay equipos registrados") }
-                    else -> Column {
+                    equipmentList.isEmpty() -> AppEmptyState(
+                        icon = AppIcons.Equipment,
+                        title = "Sin equipos",
+                        message = "Este cliente todavía no tiene equipos registrados.",
+                    )
+                    else -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
                         equipmentList.forEach { eq ->
                             AppCard(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 onTap = { navigator.push(AdminEquipmentDetailScreen(eq.id)) },
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(AppColors.Secondary.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(imageVector = AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary)
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
+                                    AppLeadingIcon(AppIcons.Equipment, tint = AppColors.Secondary)
+                                    Spacer(modifier = Modifier.width(Spacing.md))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(eq.name, fontWeight = FontWeight.SemiBold)
+                                        Text(eq.name, fontWeight = FontWeight.Bold)
                                         Text(eq.typeLabel, color = AppColors.TextMuted, fontSize = 13.sp)
                                     }
                                     Icon(imageVector = AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)

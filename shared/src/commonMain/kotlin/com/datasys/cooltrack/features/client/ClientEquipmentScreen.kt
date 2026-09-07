@@ -2,14 +2,13 @@ package com.datasys.cooltrack.features.client
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -31,70 +30,72 @@ class ClientEquipmentScreen : Screen {
         val clientRepository: ClientRepository = koinInject()
         val authRepository: AuthRepository = koinInject()
         val scope = rememberCoroutineScope()
-        
+
         val user = authRepository.state.collectAsStateSimple().value.user
         var equipment by remember { mutableStateOf<List<Equipment>?>(null) }
-        var isLoading by remember { mutableStateOf(true) }
+        var error by remember { mutableStateOf<String?>(null) }
 
-        fun loadData() {
+        fun load() {
             user?.id?.let { id ->
                 scope.launch {
-                    isLoading = true
-                    equipment = clientRepository.getMyEquipment(id)
-                    isLoading = false
+                    error = null
+                    equipment = null
+                    try {
+                        equipment = clientRepository.getMyEquipment(id)
+                    } catch (e: Exception) {
+                        error = e.message ?: "No se pudieron cargar tus equipos"
+                    }
                 }
             }
         }
 
-        LaunchedEffect(user?.id) {
-            loadData()
-        }
+        LaunchedEffect(user?.id) { load() }
 
-        Scaffold(
-            topBar = { 
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Mis Equipos") }
-                ) 
-            },
-        ) { padding ->
-            if (isLoading) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                val list = equipment ?: emptyList()
-                if (list.isEmpty()) {
-                    Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                        Text("Aún no tienes equipos registrados")
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(list) { eq ->
-                            AppCard(
-                                onTap = { navigator.push(ClientEquipmentNewScreen(eq)) }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        AppIcons.Equipment,
-                                        contentDescription = null,
-                                        tint = AppColors.Secondary,
-                                        modifier = Modifier.size(32.dp)
+        AppScreenScaffold(title = "Mis Equipos") { padding ->
+            AppAsyncContent(
+                data = equipment,
+                error = error,
+                emptyIcon = AppIcons.Equipment,
+                emptyTitle = "Sin equipos registrados",
+                emptyMessage = "Agregá tus equipos para que los técnicos sepan sobre qué van a trabajar.",
+                emptyAction = {
+                    AppButton(
+                        label = "Agregar equipo",
+                        icon = AppIcons.Add,
+                        onPressed = { navigator.push(ClientEquipmentNewScreen()) },
+                    )
+                },
+                onRetry = { load() },
+                modifier = Modifier.padding(padding),
+            ) { list ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = Spacing.screen,
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                ) {
+                    itemsIndexed(list) { index, eq ->
+                        AppCard(
+                            modifier = Modifier.staggeredItem(index),
+                            onTap = { navigator.push(ClientEquipmentNewScreen(eq)) },
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AppLeadingIcon(AppIcons.Equipment, tint = AppColors.Secondary)
+                                Spacer(Modifier.width(Spacing.md))
+                                Column(Modifier.weight(1f)) {
+                                    Text(eq.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        listOfNotNull(eq.brand, eq.model).joinToString(" ").ifBlank { "Sin marca" },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = AppColors.TextSecondary,
                                     )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(eq.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                        Text("${eq.brand} ${eq.model ?: ""}", style = MaterialTheme.typography.bodyMedium)
-                                        Text("S/N: ${eq.serialNumber ?: "N/A"}", fontSize = 12.sp, color = AppColors.TextMuted)
-                                    }
-                                    Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)
+                                    Text(
+                                        "S/N: ${eq.serialNumber ?: "N/A"}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = AppColors.TextMuted,
+                                    )
                                 }
+                                Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)
                             }
                         }
                     }

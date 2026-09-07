@@ -46,12 +46,15 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.EquipmentType
 import com.datasys.cooltrack.models.Equipment
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppConfirmDialog
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppLoadingList
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSectionTitle
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
@@ -146,23 +149,10 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle del Equipo") },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppColors.Primary,
-                        titleContentColor = Color.White,
-                        actionIconContentColor = Color.White,
-                        navigationIconContentColor = Color.White,
-                    ),
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(imageVector = AppIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
-                    actions = {
+        AppScreenScaffold(
+            title = "Detalle del Equipo",
+            onBack = { navigator.pop() },
+            actions = {
                         IconButton(onClick = { isEditing = !isEditing }) {
                             Icon(
                                 imageVector = if (isEditing) AppIcons.Close else AppIcons.Edit,
@@ -180,19 +170,16 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                                 )
                             }
                         }
-                    },
-                )
             },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             val current = equipment
             when {
-                isLoading && current == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                current == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Equipo no encontrado")
-                }
+                isLoading && current == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 5)
+                current == null -> AppErrorState(
+                    message = "No pudimos encontrar este equipo.",
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
                 else -> Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -228,7 +215,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("Información del Equipo", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    AppSectionTitle("Información del Equipo")
                     Spacer(modifier = Modifier.height(12.dp))
 
                     AppInput(
@@ -301,12 +288,12 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("Ubicación", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    AppSectionTitle("Ubicación")
                     Spacer(modifier = Modifier.height(12.dp))
                     AppInput(value = location, onValueChange = { location = it }, label = "Ubicación", maxLines = 2, enabled = isEditing)
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text("Notas", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    AppSectionTitle("Notas")
                     Spacer(modifier = Modifier.height(12.dp))
                     AppInput(value = notes, onValueChange = { notes = it }, label = "Notas", maxLines = 3, enabled = isEditing)
 

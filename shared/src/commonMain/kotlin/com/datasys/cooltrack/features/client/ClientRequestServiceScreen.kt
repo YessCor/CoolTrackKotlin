@@ -53,31 +53,20 @@ class ClientRequestServiceScreen : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Solicitar Servicio") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    }
-                )
-            },
-            snackbarHost = { AppToastHost(toastState) }
+        AppScreenScaffold(
+            title = "Solicitar Servicio",
+            onBack = { navigator.pop() },
+            snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
+                    .padding(Spacing.lg)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
-                Text("Tipo de Servicio Requerido", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                
-                // Chips de selección de servicio
+                AppFormSection(title = "Tipo de servicio requerido") {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -93,10 +82,10 @@ class ClientRequestServiceScreen : Screen {
                         )
                     }
                 }
+                }
 
-                Text("Equipo Relacionado (Opcional)", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                AppCard {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                AppFormSection(title = "Equipo relacionado (opcional)") {
+                    Column {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -133,22 +122,23 @@ class ClientRequestServiceScreen : Screen {
                     }
                 }
 
-                Text("Descripción del problema", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                AppInput(
-                    value = description,
-                    onValueChange = { description = it },
-                    hint = "Describe detalladamente lo que el equipo presenta o el mantenimiento requerido...",
-                    maxLines = 4
-                )
+                AppFormSection(title = "Detalle de la solicitud") {
+                    AppInput(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = "Descripción del problema",
+                        hint = "Describe lo que el equipo presenta o el mantenimiento requerido...",
+                        maxLines = 4
+                    )
+                    AppInput(
+                        value = address,
+                        onValueChange = { address = it },
+                        label = "Dirección de atención",
+                        hint = "Calle, número, edificio / local, ciudad"
+                    )
+                }
 
-                Text("Dirección de Atención", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                AppInput(
-                    value = address,
-                    onValueChange = { address = it },
-                    hint = "Calle, Número, Edificio / Local, Ciudad"
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Spacing.xs))
 
                 AppButton(
                     label = if (isSubmitting) "Enviando..." else "Enviar Solicitud de Servicio",

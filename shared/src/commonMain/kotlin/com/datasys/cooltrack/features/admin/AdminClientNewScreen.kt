@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,16 +17,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
+import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
+import com.datasys.cooltrack.ui.components.Spacing
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -86,9 +85,9 @@ class AdminClientNewScreen : Screen {
             }
         }
 
-        Scaffold(
-            topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Nuevo Cliente") }) },
+        AppScreenScaffold(
+            title = "Nuevo Cliente",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(
@@ -96,9 +95,11 @@ class AdminClientNewScreen : Screen {
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(Spacing.lg),
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg),
             ) {
+              AppCard {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
                 AppInput(
                     value = name,
                     onValueChange = { name = it },
@@ -128,14 +129,17 @@ class AdminClientNewScreen : Screen {
                     prefixIcon = AppIcons.Location,
                     maxLines = 2,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                }
+              }
                 AppButton(
                     label = "Crear Cliente",
+                    icon = AppIcons.Check,
                     onPressed = ::submit,
                     isLoading = isLoading,
                     isFullWidth = true,
                     variant = AppButtonVariant.PRIMARY,
                 )
+                Spacer(modifier = Modifier.height(Spacing.sm))
             }
         }
     }

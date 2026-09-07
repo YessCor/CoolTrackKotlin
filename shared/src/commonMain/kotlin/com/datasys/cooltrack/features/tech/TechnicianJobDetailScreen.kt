@@ -36,8 +36,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButtonVariant
+import com.datasys.cooltrack.ui.components.AppLoadingList
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import kotlinx.datetime.Clock
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -97,24 +98,13 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
             isLoading = false
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    }
-                )
-            },
+        AppScreenScaffold(
+            title = "Detalle de Orden",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) }
         ) { padding ->
             if (isLoading) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
             } else {
                 order?.let { currentOrder ->
                     Column(
@@ -126,7 +116,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                     ) {
                         // Header con orden y estado
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -164,7 +154,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                             Text("Información del Equipo", fontWeight = FontWeight.SemiBold)
                             Spacer(modifier = Modifier.height(8.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(24.dp))
                                         Spacer(modifier = Modifier.width(12.dp))
@@ -191,7 +181,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                         Text("Notas del trabajo", fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(8.dp))
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 OutlinedTextField(
                                     value = notes,
                                     onValueChange = { notes = it },
@@ -232,7 +222,6 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                         
                         AppCard {
                             Column(
-                                modifier = Modifier.padding(12.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Box(
@@ -311,7 +300,6 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
 
                         AppCard {
                             Column(
-                                modifier = Modifier.padding(12.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
                                 Box(

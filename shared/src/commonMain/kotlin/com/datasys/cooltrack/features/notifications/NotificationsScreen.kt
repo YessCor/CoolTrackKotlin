@@ -48,6 +48,8 @@ import com.datasys.cooltrack.notifications.NotificationRepository
 import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.appTopBarColors
+import androidx.compose.material3.Divider
 import com.datasys.cooltrack.util.collectAsStateSimple
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -72,9 +74,12 @@ class NotificationsScreen : Screen {
         }
 
         Scaffold(
+            containerColor = AppColors.SurfaceVariant,
             topBar = {
+              Column {
                 AppTopBar(
-                    expandedHeight = 44.dp,
+                    expandedHeight = 48.dp,
+                    colors = appTopBarColors(),
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Notificaciones")
@@ -103,6 +108,8 @@ class NotificationsScreen : Screen {
                         }
                     },
                 )
+                Divider(thickness = 1.dp, color = AppColors.SurfaceBorder)
+              }
             },
         ) { padding ->
             if (notifications.isEmpty()) {

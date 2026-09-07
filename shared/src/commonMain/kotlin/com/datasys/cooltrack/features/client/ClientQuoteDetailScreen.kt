@@ -40,13 +40,16 @@ import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.QuoteItem
+import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLoadingList
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -80,24 +83,13 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
             loadQuote()
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle de Cotización") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
-                )
-            },
+        AppScreenScaffold(
+            title = "Detalle de Cotización",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) }
         ) { padding ->
             if (isLoading) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                AppLoadingList(modifier = Modifier.padding(padding), count = 4)
             } else {
                 quote?.let { q ->
                     Column(
@@ -136,7 +128,7 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
                         // Items
                         if (!q.items.isNullOrEmpty()) {
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Detalle de Items", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     q.items!!.forEach { item ->
@@ -150,10 +142,10 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
 
                         // Totales
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 SummaryRow("Subtotal", q.formattedSubtotal)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                SummaryRow("IVA (16%)", "$" + (kotlin.math.round(q.taxAmount * 100) / 100.0).toString())
+                                SummaryRow("IVA (${(q.taxRate * 100).toInt()}%)", q.formattedTax)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                                 SummaryRow("TOTAL", q.formattedTotal, isBold = true)
                             }
@@ -163,7 +155,7 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
                         if (!q.notes.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Notas adicionales", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(q.notes!!)
@@ -222,9 +214,10 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
                         
                         Spacer(modifier = Modifier.height(32.dp))
                     }
-                } ?: Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No se pudo cargar la cotización")
-                }
+                } ?: AppErrorState(
+                    message = "No se pudo cargar la cotización.",
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
@@ -239,13 +232,13 @@ private fun QuoteItemRow(item: QuoteItem) {
         Column(modifier = Modifier.weight(1f)) {
             Text(item.description, fontWeight = FontWeight.Medium, fontSize = 15.sp)
             Text(
-                "${item.quantity} x $" + (kotlin.math.round(item.unitPrice * 100) / 100.0).toString(),
+                "${item.quantity} × ${formatMoney(item.unitPrice)}",
                 fontSize = 13.sp,
                 color = AppColors.TextMuted,
             )
         }
         Text(
-            "$" + (kotlin.math.round(item.total * 100) / 100.0).toString(),
+            formatMoney(item.total),
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
         )

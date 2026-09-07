@@ -95,24 +95,15 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text(if (isEditing) "Editar Equipo" else "Nuevo Equipo") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
-                    actions = {
-                        if (isEditing) {
-                            IconButton(onClick = { showDeleteDialog = true }) {
-                                Icon(AppIcons.Delete, contentDescription = "Eliminar", tint = AppColors.Error)
-                            }
-                        }
+        AppScreenScaffold(
+            title = if (isEditing) "Editar Equipo" else "Nuevo Equipo",
+            onBack = { navigator.pop() },
+            actions = {
+                if (isEditing) {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(AppIcons.Delete, contentDescription = "Eliminar", tint = AppColors.Error)
                     }
-                )
+                }
             },
             snackbarHost = { AppToastHost(toastState) }
         ) { padding ->
@@ -120,24 +111,25 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
+                    .padding(Spacing.lg)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.lg)
             ) {
+                AppFormSection(title = "Datos del equipo") {
                 AppInput(
                     value = name,
                     onValueChange = { name = it },
-                    label = "Nombre del Equipo (ej: Sala, Recámara Principal)*",
+                    label = "Nombre del equipo (ej: Sala, Recámara Principal) *",
                     prefixIcon = AppIcons.Equipment
                 )
 
-                Text("Tipo de Unidad", fontWeight = FontWeight.SemiBold)
                 var typeExpanded by remember { mutableStateOf(false) }
                 Box {
                     OutlinedTextField(
                         value = selectedType.label,
                         onValueChange = {},
                         readOnly = true,
+                        label = { Text("Tipo de unidad") },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
                             IconButton(onClick = { typeExpanded = !typeExpanded }) {
@@ -155,37 +147,35 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
                     }
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        AppInput(value = brand, onValueChange = { brand = it }, label = "Marca")
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
-                        AppInput(value = model, onValueChange = { model = it }, label = "Modelo")
-                    }
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                    AppInput(value = brand, onValueChange = { brand = it }, label = "Marca", modifier = Modifier.weight(1f))
+                    AppInput(value = model, onValueChange = { model = it }, label = "Modelo", modifier = Modifier.weight(1f))
                 }
 
-                AppInput(value = serial, onValueChange = { serial = it }, label = "Número de Serie")
-                
+                AppInput(value = serial, onValueChange = { serial = it }, label = "Número de serie")
                 AppInput(
                     value = capacity,
                     onValueChange = { capacity = it },
-                    label = "Capacidad (Toneladas)",
+                    label = "Capacidad (toneladas)",
                     keyboardType = KeyboardType.Number
                 )
+                }
 
-                AppInput(value = location, onValueChange = { location = it }, label = "Ubicación / Piso", prefixIcon = AppIcons.Location)
+                AppFormSection(title = "Ubicación y notas") {
+                    AppInput(value = location, onValueChange = { location = it }, label = "Ubicación / piso", prefixIcon = AppIcons.Location)
+                    AppInput(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = "Notas técnicas (ej: requiere escalera, difícil acceso)",
+                        maxLines = 3
+                    )
+                }
 
-                AppInput(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = "Notas Técnicas (ej: requiere escalera, difícil acceso)",
-                    maxLines = 3
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(Spacing.xs))
 
                 AppButton(
-                    label = if (isSaving) "Guardando..." else "Guardar Equipo",
+                    label = "Guardar equipo",
+                    icon = AppIcons.Check,
                     onPressed = ::save,
                     isLoading = isSaving,
                     isFullWidth = true

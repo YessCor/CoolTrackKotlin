@@ -1,25 +1,10 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,16 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.models.Quote
-import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.ui.components.AppAsyncContent
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLeadingIcon
+import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.staggeredItem
 import org.koin.compose.koinInject
 
 /**
@@ -48,8 +37,7 @@ import org.koin.compose.koinInject
  * local, ahora vía `AdminRepository.getAllQuotes()` sobre Supabase).
  *
  * La creación de cotizaciones ya no vive acá: el FAB que abría
- * `AdminQuoteNewScreen` se movió al menú del botón "+" del shell, que ocupa
- * esa misma esquina.
+ * `AdminQuoteNewScreen` se movió al menú del botón "+" del shell.
  */
 class AdminQuotesScreen : Screen {
     @Composable
@@ -57,64 +45,49 @@ class AdminQuotesScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val adminRepository: AdminRepository = koinInject()
         var quotes by remember { mutableStateOf<List<Quote>?>(null) }
-        var errorMessage by remember { mutableStateOf<String?>(null) }
+        var error by remember { mutableStateOf<String?>(null) }
 
-        LaunchedEffect(Unit) {
+        suspend fun load() {
+            error = null
             try {
                 quotes = adminRepository.getAllQuotes()
             } catch (e: Exception) {
-                errorMessage = e.message
+                error = e.message ?: "No se pudieron cargar las cotizaciones"
             }
         }
 
-        Scaffold(
-            topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Cotizaciones") }) },
-        ) { padding ->
-            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                val list = quotes
-                when {
-                    list == null && errorMessage == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                    errorMessage != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Error: $errorMessage")
-                    }
-                    list != null && list.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No hay cotizaciones")
-                    }
-                    list != null -> LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(list) { quote ->
-                            val statusColor = quoteStatusColor(quote.status)
-                            AppCard(
-                                onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) },
-                            ) {
-                                Row(modifier = Modifier.fillMaxWidth()) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(AppColors.Secondary.copy(alpha = 0.2f), CircleShape),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text("#${quote.quoteNumber}", color = AppColors.Secondary, fontSize = 12.sp)
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.SemiBold)
-                                        Text(quote.formattedTotal, fontSize = 13.sp)
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .background(statusColor.copy(alpha = 0.1f), RoundedCornerShape(4.dp))
-                                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                                    ) {
-                                        Text(quote.statusLabel, color = statusColor, fontSize = 12.sp)
-                                    }
+        LaunchedEffect(Unit) { load() }
+
+        AppScreenScaffold(title = "Cotizaciones") { padding ->
+            AppAsyncContent(
+                data = quotes,
+                error = error,
+                emptyIcon = AppIcons.Quotes,
+                emptyTitle = "No hay cotizaciones",
+                emptyMessage = "Creá una cotización desde el botón + para enviarla a un cliente.",
+                modifier = Modifier.padding(padding),
+            ) { list ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = Spacing.screen,
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                ) {
+                    itemsIndexed(list) { index, quote ->
+                        AppCard(
+                            modifier = Modifier.staggeredItem(index),
+                            onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) },
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                AppLeadingIcon(AppIcons.Quotes, tint = quoteStatusColor(quote.status))
+                                Spacer(Modifier.width(Spacing.md))
+                                Column(Modifier.weight(1f)) {
+                                    Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(quote.formattedTotal, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
                                 }
                             }
+                            Spacer(Modifier.height(Spacing.md))
+                            AppQuoteStatusBadge(quote.status)
                         }
                     }
                 }

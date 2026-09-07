@@ -51,13 +51,17 @@ import com.datasys.cooltrack.models.User
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLoadingList
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppStatusBadge
 import com.datasys.cooltrack.ui.components.AppToastHost
+import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.formatShortDate
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -98,24 +102,13 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
             isLoading = false
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
-                )
-            },
+        AppScreenScaffold(
+            title = "Detalle de Orden",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             if (isLoading) {
-                Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
             } else {
                 order?.let { currentOrder ->
                     Column(
@@ -140,7 +133,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        currentOrder.createdAt.toString().split("T").first(),
+                                        formatShortDate(currentOrder.createdAt.toString()),
                                         fontSize = 13.sp,
                                         color = AppColors.TextMuted,
                                     )
@@ -153,7 +146,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 
                         // Información del servicio
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 Text("Servicio", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(currentOrder.serviceType, fontWeight = FontWeight.Medium)
@@ -171,7 +164,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                         equipment?.let { eq ->
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Equipo Relacionado", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -238,7 +231,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 
                         // Timeline de estados
                         AppCard {
-                            Column(modifier = Modifier.padding(12.dp)) {
+                            Column {
                                 Text("Progreso", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                 Spacer(modifier = Modifier.height(12.dp))
                                 StatusTimeline(currentOrder)
@@ -249,7 +242,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                         technician?.let { tech ->
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Técnico Asignado", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -273,7 +266,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                         if (!currentOrder.technicianNotes.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Reporte del Técnico", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(currentOrder.technicianNotes!!, fontSize = 14.sp)
@@ -285,7 +278,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                         if (currentOrder.isCompleted && currentOrder.clientRating == null) {
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Calificar servicio", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -353,7 +346,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                         if (currentOrder.clientRating != null) {
                             Spacer(modifier = Modifier.height(16.dp))
                             AppCard {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column {
                                     Text("Tu calificación", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Row {
@@ -392,7 +385,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                                     ) {
                                         Text("Total del Trabajo", fontWeight = FontWeight.Medium)
                                         Text(
-                                            "$" + (kotlin.math.round(finalTotal * 100) / 100.0).toString(),
+                                            formatMoney(finalTotal),
                                             fontWeight = FontWeight.ExtraBold,
                                             color = AppColors.Primary,
                                             fontSize = 24.sp,
@@ -413,7 +406,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
 @Composable
 private fun QuoteCard(quote: Quote, onTap: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit) {
     AppCard(onTap = onTap) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
                 com.datasys.cooltrack.ui.components.AppQuoteStatusBadge(quote.status)

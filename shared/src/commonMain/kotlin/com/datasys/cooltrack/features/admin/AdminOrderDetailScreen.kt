@@ -53,13 +53,16 @@ import com.datasys.cooltrack.notifications.NotificationRepository
 import com.datasys.cooltrack.services.PdfContentBuilder
 import com.datasys.cooltrack.services.PdfService
 import com.datasys.cooltrack.services.SyncService
-import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLoadingList
 import com.datasys.cooltrack.ui.components.AppModal
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
@@ -181,17 +184,10 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
             }
         }
 
-        Scaffold(
-            topBar = {
-                AppTopBar(
-                    expandedHeight = 44.dp,
-                    title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(imageVector = AppIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
-                    actions = {
+        AppScreenScaffold(
+            title = "Detalle de Orden",
+            onBack = { navigator.pop() },
+            actions = {
                         val current = order
                         if (current != null) {
                             IconButton(onClick = {
@@ -209,19 +205,16 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                                 CircularProgressIndicator(strokeWidth = 2.dp)
                             }
                         }
-                    },
-                )
             },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             val current = order
             when {
-                isLoading && current == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                current == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Orden no encontrada")
-                }
+                isLoading && current == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 5)
+                current == null -> AppErrorState(
+                    message = "No pudimos encontrar esta orden.",
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
                 else -> Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -367,7 +360,7 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                                     Column {
                                         Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
                                         Text(
-                                            "Total: $${quote.total}",
+                                            "Total: ${formatMoney(quote.total)}",
                                             color = AppColors.Primary,
                                             fontSize = 14.sp
                                         )

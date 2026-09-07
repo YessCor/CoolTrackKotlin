@@ -17,12 +17,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,10 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppErrorState
 import com.datasys.cooltrack.ui.components.AppIcons
+import com.datasys.cooltrack.ui.components.AppLoadingList
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
 import org.koin.compose.koinInject
 
 /**
@@ -59,6 +60,7 @@ import org.koin.compose.koinInject
 class AdminReportsScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val reportsRepository: ReportsRepository = koinInject()
         var data by remember { mutableStateOf<ReportsData?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -71,16 +73,17 @@ class AdminReportsScreen : Screen {
             }
         }
 
-        Scaffold(topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Informes de Rendimiento") }) }) { padding ->
+        AppScreenScaffold(
+            title = "Informes de Rendimiento",
+            onBack = { navigator.pop() },
+        ) { padding ->
             val current = data
             when {
-                current == null && errorMessage == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-                errorMessage != null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Error: $errorMessage")
-                }
+                current == null && errorMessage == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 3)
+                errorMessage != null -> AppErrorState(
+                    message = errorMessage!!,
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                )
                 current != null -> Column(
                     modifier = Modifier
                         .fillMaxSize()

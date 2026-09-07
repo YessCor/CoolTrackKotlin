@@ -12,6 +12,6 @@ data class DashboardStats(
     val totalRevenue: Double = 0.0,
     val averageRating: Double = 0.0,
 ) {
-    val formattedRevenue: String get() = "$" + (kotlin.math.round(totalRevenue * 100) / 100)
+    val formattedRevenue: String get() = formatMoney(totalRevenue)
     val formattedRating: String get() = (kotlin.math.round(averageRating * 10) / 10).toString()
 }

@@ -42,7 +42,11 @@ fun AppCard(
     shape: Shape = RoundedCornerShape(20.dp),
     content: @Composable () -> Unit,
 ) {
-    val clickableModifier = if (onTap != null) modifier.clickable { onTap() } else modifier
+    // Por defecto la tarjeta ocupa todo el ancho disponible (comportamiento
+    // esperado en listas y pantallas de detalle); un `modifier` con ancho
+    // propio lo sigue sobreescribiendo porque va después.
+    val base = Modifier.fillMaxWidth().then(modifier)
+    val clickableModifier = if (onTap != null) base.clickable { onTap() } else base
     Card(
         modifier = clickableModifier,
         shape = shape,

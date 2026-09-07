@@ -52,10 +52,12 @@ import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.models.ServiceCatalog
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
-import com.datasys.cooltrack.ui.components.AppTopBar
+import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
+import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSectionTitle
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import com.datasys.cooltrack.core.secureInsert
@@ -211,9 +213,9 @@ class AdminQuoteNewScreen(
             }
         }
 
-        Scaffold(
-            topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Nueva Cotización") }) },
+        AppScreenScaffold(
+            title = "Nueva Cotización",
+            onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(
@@ -315,7 +317,7 @@ class AdminQuoteNewScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Items de la Cotización", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                AppSectionTitle("Items de la Cotización")
                 Spacer(modifier = Modifier.height(12.dp))
 
                 val catalogList = catalog
@@ -476,9 +478,4 @@ private fun TotalRow(label: String, value: Double, isBold: Boolean = false, colo
             fontSize = if (isBold) 18.sp else 14.sp,
         )
     }
-}
-
-private fun formatMoney(value: Double): String {
-    val rounded = kotlin.math.round(value * 100) / 100
-    return "$" + rounded.toString()
 }

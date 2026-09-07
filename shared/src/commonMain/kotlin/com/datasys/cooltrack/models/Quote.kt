@@ -41,12 +41,20 @@ data class Quote(
 ) {
     val statusLabel: String get() = status.label
 
-    // Formateo simple; para moneda/locale real usar una lib de formato (ver PdfService).
-    val formattedTotal: String get() = "$" + formatAmount(total)
-    val formattedSubtotal: String get() = "$" + formatAmount(subtotal)
+    val formattedTotal: String get() = formatMoney(total)
+    val formattedSubtotal: String get() = formatMoney(subtotal)
+    val formattedTax: String get() = formatMoney(taxAmount)
+}
 
-    private fun formatAmount(value: Double): String {
-        val rounded = kotlin.math.round(value * 100) / 100
-        return rounded.toString()
-    }
+/**
+ * Formato de moneda único de la app: "$1.234,50" (separador de miles ".",
+ * decimales ",", siempre 2 dígitos). Vale para todos los modelos que
+ * muestran importes; para locale real más adelante, cambiar solo acá.
+ */
+fun formatMoney(value: Double): String {
+    val rounded = kotlin.math.round(kotlin.math.abs(value) * 100) / 100.0
+    val whole = rounded.toLong()
+    val cents = kotlin.math.round((rounded - whole) * 100).toInt().toString().padStart(2, '0')
+    val wholeStr = whole.toString().reversed().chunked(3).joinToString(".").reversed()
+    return (if (value < 0) "-$" else "$") + "$wholeStr,$cents"
 }
