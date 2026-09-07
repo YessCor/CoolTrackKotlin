@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.FadeTransition
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.auth.AuthState
 import com.datasys.cooltrack.core.UserRole
@@ -52,7 +52,7 @@ fun CooltrackApp(authRepository: AuthRepository) {
             }
         }
 
-        CurrentScreen()
+        FadeTransition(navigator)
     }
 }
 

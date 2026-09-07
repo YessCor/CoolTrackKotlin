@@ -1,7 +1,6 @@
 package com.datasys.cooltrack.features.admin
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,22 +21,16 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.models.Quote
-import com.datasys.cooltrack.ui.components.AppAsyncContent
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
+import com.datasys.cooltrack.ui.components.AppListScreen
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
-import com.datasys.cooltrack.ui.components.Spacing
-import com.datasys.cooltrack.ui.components.staggeredItem
+import com.datasys.cooltrack.ui.components.appEnter
 import org.koin.compose.koinInject
 
 /**
- * Equivalente a admin_quotes_screen.dart (incluye su `quotesProvider`
- * local, ahora vía `AdminRepository.getAllQuotes()` sobre Supabase).
- *
- * La creación de cotizaciones ya no vive acá: el FAB que abría
- * `AdminQuoteNewScreen` se movió al menú del botón "+" del shell.
+ * Lista de cotizaciones para admin. La creación vive en el menú "+".
  */
 class AdminQuotesScreen : Screen {
     @Composable
@@ -58,45 +51,37 @@ class AdminQuotesScreen : Screen {
 
         LaunchedEffect(Unit) { load() }
 
-        AppScreenScaffold(title = "Cotizaciones") { padding ->
-            AppAsyncContent(
-                data = quotes,
-                error = error,
-                emptyIcon = AppIcons.Quotes,
-                emptyTitle = "No hay cotizaciones",
-                emptyMessage = "Creá una cotización desde el botón + para enviarla a un cliente.",
-                modifier = Modifier.padding(padding),
-            ) { list ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = Spacing.screen,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        AppListScreen(
+            title = "Cotizaciones",
+            data = quotes,
+            error = error,
+            onBack = if (navigator.canPop) ({ navigator.pop() }) else null,
+            emptyIcon = AppIcons.Quotes,
+            emptyTitle = "No hay cotizaciones",
+            emptyMessage = "Creá una cotización desde el botón + para enviarla a un cliente.",
+        ) { list ->
+            itemsIndexed(list) { index, quote ->
+                AppCard(
+                    modifier = Modifier.appEnter(index),
+                    onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) },
                 ) {
-                    itemsIndexed(list) { index, quote ->
-                        AppCard(
-                            modifier = Modifier.staggeredItem(index),
-                            onTap = { navigator.push(AdminQuoteDetailScreen(quote.id)) },
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                AppLeadingIcon(AppIcons.Quotes, tint = quoteStatusColor(quote.status))
-                                Spacer(Modifier.width(Spacing.md))
-                                Column(Modifier.weight(1f)) {
-                                    Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(quote.formattedTotal, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
-                                }
-                            }
-                            Spacer(Modifier.height(Spacing.md))
-                            AppQuoteStatusBadge(quote.status)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppLeadingIcon(AppIcons.Quotes, tint = quoteStatusColor(quote.status))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Spacer(Modifier.height(2.dp))
+                            Text(quote.formattedTotal, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
                         }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    AppQuoteStatusBadge(quote.status)
                 }
             }
         }
     }
 }
 
-/** Equivalente a `_getStatusColor` en admin_quotes_screen.dart. */
 internal fun quoteStatusColor(status: QuoteStatus): Color = when (status) {
     QuoteStatus.DRAFT -> AppColors.TextMuted
     QuoteStatus.SENT -> AppColors.Info

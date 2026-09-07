@@ -37,8 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.datasys.cooltrack.ui.components.AppButtonVariant
-import com.datasys.cooltrack.ui.components.AppLoadingList
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import kotlinx.datetime.Clock
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -98,39 +98,36 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
             isLoading = false
         }
 
-        AppScreenScaffold(
+        val order0 = order
+        AppHeroScaffold(
             title = "Detalle de Orden",
             onBack = { navigator.pop() },
-            snackbarHost = { AppToastHost(toastState) }
-        ) { padding ->
+            snackbarHost = { AppToastHost(toastState) },
+            heroContent = {
+                Text("Trabajo", style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Orden #${order0?.orderNumber ?: "…"}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = androidx.compose.ui.graphics.Color.White,
+                )
+                if (order0 != null) {
+                    Spacer(Modifier.height(10.dp))
+                    AppStatusBadge(order0.status, large = true)
+                }
+            },
+        ) {
             if (isLoading) {
-                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { repeat(4) { AppSkeletonListCard() } }
             } else {
                 order?.let { currentOrder ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        // Header con orden y estado
+                    Column {
                         AppCard {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text("Orden #${currentOrder.orderNumber}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                    AppStatusBadge(currentOrder.status, large = true)
-                                }
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                                Text("Servicio: ${currentOrder.serviceType}", style = MaterialTheme.typography.bodyMedium)
-                                if (currentOrder.description.isNotBlank()) {
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Descripción: ${currentOrder.description}", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
-                                }
+                            Text("Servicio: ${currentOrder.serviceType}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                            if (currentOrder.description.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Descripción: ${currentOrder.description}", style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
                             }
                         }
 

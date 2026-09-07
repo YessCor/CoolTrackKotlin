@@ -2,7 +2,6 @@ package com.datasys.cooltrack.features.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -24,21 +23,18 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.Client
-import com.datasys.cooltrack.ui.components.AppAsyncContent
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppFab
 import com.datasys.cooltrack.ui.components.AppIcons
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppListScreen
 import com.datasys.cooltrack.ui.components.AppTag
-import com.datasys.cooltrack.ui.components.Spacing
-import com.datasys.cooltrack.ui.components.staggeredItem
+import com.datasys.cooltrack.ui.components.appEnter
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * Equivalente a admin_clients_screen.dart (incluye su `clientsProvider`
- * local, migrado acá directo como una llamada suspendida en
- * `LaunchedEffect` en vez de un `FutureProvider` aparte).
+ * Lista de clientes para admin.
  */
 class AdminClientsScreen : Screen {
     @Composable
@@ -62,60 +58,50 @@ class AdminClientsScreen : Screen {
 
         LaunchedEffect(Unit) { load() }
 
-        AppScreenScaffold(title = "Clientes") { padding ->
-            AppAsyncContent(
-                data = clients,
-                error = error,
-                emptyIcon = AppIcons.Clients,
-                emptyTitle = "No hay clientes",
-                emptyMessage = "Registrá tu primer cliente para empezar a operar.",
-                emptyAction = {
-                    AppButton(
-                        label = "Agregar cliente",
-                        icon = AppIcons.PersonAdd,
-                        onPressed = { navigator.push(AdminClientNewScreen()) },
-                    )
-                },
-                onRetry = { scope.launch { load() } },
-                modifier = Modifier.padding(padding),
-            ) { list ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = Spacing.screen,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        AppListScreen(
+            title = "Clientes",
+            data = clients,
+            error = error,
+            onBack = if (navigator.canPop) ({ navigator.pop() }) else null,
+            emptyIcon = AppIcons.Clients,
+            emptyTitle = "No hay clientes",
+            emptyMessage = "Registrá tu primer cliente para empezar a operar.",
+            emptyAction = {
+                AppButton(label = "Agregar cliente", icon = AppIcons.PersonAdd, onPressed = { navigator.push(AdminClientNewScreen()) })
+            },
+            onRetry = { scope.launch { load() } },
+            floatingActionButton = {
+                AppFab(icon = AppIcons.PersonAdd, contentDescription = "Nuevo cliente") { navigator.push(AdminClientNewScreen()) }
+            },
+        ) { list ->
+            itemsIndexed(list) { index, client ->
+                AppCard(
+                    modifier = Modifier.appEnter(index),
+                    onTap = { navigator.push(AdminClientDetailScreen(client.id)) },
                 ) {
-                    itemsIndexed(list) { index, client ->
-                        AppCard(
-                            modifier = Modifier.staggeredItem(index),
-                            onTap = { navigator.push(AdminClientDetailScreen(client.id)) },
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier.size(44.dp).background(AppColors.Secondary.copy(alpha = 0.14f), CircleShape),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .background(AppColors.Secondary.copy(alpha = 0.14f), CircleShape),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        client.name.take(1).uppercase(),
-                                        color = AppColors.Secondary,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleMedium,
-                                    )
-                                }
-                                Spacer(Modifier.width(Spacing.md))
-                                Column(Modifier.weight(1f)) {
-                                    Text(client.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(client.email, color = AppColors.TextMuted, style = MaterialTheme.typography.bodySmall)
-                                }
-                                if (!client.isActive) {
-                                    AppTag("Inactivo", AppColors.Error)
-                                    Spacer(Modifier.width(Spacing.sm))
-                                }
-                                Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)
-                            }
+                            Text(
+                                client.name.take(1).uppercase(),
+                                color = AppColors.Secondary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium,
+                            )
                         }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(client.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Spacer(Modifier.height(2.dp))
+                            Text(client.email, color = AppColors.TextMuted, style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (!client.isActive) {
+                            AppTag("Inactivo", AppColors.Error)
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Icon(AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)
                     }
                 }
             }

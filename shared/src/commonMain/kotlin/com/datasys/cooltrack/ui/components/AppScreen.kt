@@ -90,12 +90,13 @@ fun AppScreenScaffold(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     actions: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {},
-    containerColor: Color = AppColors.SurfaceVariant,
+    containerColor: Color = AppColors.Background,
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit,
 ) {
+    com.datasys.cooltrack.core.StatusBarIcons(darkIcons = true)
     Scaffold(
         modifier = modifier,
         containerColor = containerColor,

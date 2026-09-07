@@ -13,14 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -28,9 +29,9 @@ import androidx.compose.ui.unit.dp
 import com.datasys.cooltrack.core.AppColors
 
 /**
- * Equivalente a AppCard en components/card.dart. Por defecto trae una
- * elevación suave + borde de 1dp (en vez del plano `elevation = 0` original)
- * para que las tarjetas se separen visualmente del fondo sin verse pesadas.
+ * Tarjeta base del rediseño: fondo blanco, esquinas de 22dp, borde hairline
+ * y una sombra teñida de índigo (en vez del gris plano de Material) que le da
+ * profundidad sin ensuciar. `onTap` usa [pressable] (hunde con resorte).
  */
 @Composable
 fun AppCard(
@@ -38,24 +39,26 @@ fun AppCard(
     padding: PaddingValues = PaddingValues(16.dp),
     onTap: (() -> Unit)? = null,
     color: Color? = null,
-    elevation: Dp = 1.dp,
-    shape: Shape = RoundedCornerShape(20.dp),
+    elevation: Dp = 10.dp,
+    shape: Shape = RoundedCornerShape(22.dp),
     content: @Composable () -> Unit,
 ) {
-    // Por defecto la tarjeta ocupa todo el ancho disponible (comportamiento
-    // esperado en listas y pantallas de detalle); un `modifier` con ancho
-    // propio lo sigue sobreescribiendo porque va después.
-    val base = Modifier.fillMaxWidth().then(modifier)
-    val clickableModifier = if (onTap != null) base.clickable { onTap() } else base
-    Card(
-        modifier = clickableModifier,
-        shape = shape,
-        colors = CardDefaults.cardColors(containerColor = color ?: AppColors.Surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        border = BorderStroke(1.dp, AppColors.SurfaceBorder),
-    ) {
-        Column(modifier = Modifier.padding(padding)) { content() }
-    }
+    // Por defecto la tarjeta ocupa todo el ancho disponible; un `modifier`
+    // con ancho propio lo sigue sobreescribiendo porque va después.
+    var m = Modifier
+        .fillMaxWidth()
+        .then(modifier)
+        .shadow(
+            elevation = elevation,
+            shape = shape,
+            ambientColor = AppColors.ShadowTint,
+            spotColor = AppColors.ShadowTint,
+        )
+        .clip(shape)
+        .background(color ?: AppColors.Surface)
+        .border(1.dp, AppColors.SurfaceBorder, shape)
+    if (onTap != null) m = m.pressable(onClick = onTap)
+    Column(modifier = m.padding(padding)) { content() }
 }
 
 /** Equivalente a AppCardSkeleton en components/card.dart (placeholder de carga). */

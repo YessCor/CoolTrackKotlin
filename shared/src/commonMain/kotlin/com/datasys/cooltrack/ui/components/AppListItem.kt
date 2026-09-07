@@ -1,5 +1,6 @@
 package com.datasys.cooltrack.ui.components
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,9 +21,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -116,7 +120,10 @@ fun AppSectionHeader(
     }
 }
 
-/** Equivalente a AppEmptyState en components/list_item.dart. */
+/**
+ * Estado vacío del rediseño: ícono flotando (sube y baja suave) dentro de
+ * dos anillos índigo concéntricos, sobre un halo radial. Entra con `appPop`.
+ */
 @Composable
 fun AppEmptyState(
     icon: ImageVector,
@@ -125,27 +132,42 @@ fun AppEmptyState(
     message: String? = null,
     action: (@Composable () -> Unit)? = null,
 ) {
+    val floatT = androidx.compose.animation.core.rememberInfiniteTransition(label = "empty-float")
+    val dy by floatT.animateFloat(
+        initialValue = -5f,
+        targetValue = 5f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(2200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+            androidx.compose.animation.core.RepeatMode.Reverse,
+        ),
+        label = "empty-dy",
+    )
     Column(
         modifier = modifier.fillMaxWidth().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier.size(88.dp).background(AppColors.Secondary.copy(alpha = 0.1f), CircleShape),
+            modifier = Modifier.size(148.dp).appPop(),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = AppColors.Secondary,
-                modifier = Modifier.size(40.dp),
-            )
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(148.dp)) {
+                val c = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
+                drawCircle(AppColors.Secondary.copy(alpha = 0.06f), radius = size.minDimension * 0.5f, center = c)
+                drawCircle(AppColors.Secondary.copy(alpha = 0.10f), radius = size.minDimension * 0.34f, center = c)
+            }
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .graphicsLayer { translationY = dy }
+                    .shadow(14.dp, CircleShape, ambientColor = AppColors.ShadowTint, spotColor = AppColors.ShadowTint)
+                    .background(AppColors.Surface, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = AppColors.Secondary, modifier = Modifier.size(36.dp))
+            }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge,
-            textAlign = TextAlign.Center,
-        )
+        Text(text = title, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
         if (message != null) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(

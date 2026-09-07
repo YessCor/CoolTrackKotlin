@@ -1,14 +1,9 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,11 +23,11 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.TechnicianLocation
 import com.datasys.cooltrack.ui.components.AppCard
-import com.datasys.cooltrack.ui.components.AppEmptyState
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
-import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.AppListScreen
+import com.datasys.cooltrack.ui.components.AppLiveDot
+import com.datasys.cooltrack.ui.components.appEnter
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
@@ -112,49 +107,44 @@ class AdminTechTrackingScreen : Screen {
             }
         }
 
-        AppScreenScaffold(
+        val locations = latestLocations.values.toList()
+        AppListScreen(
             title = "Rastreo de Técnicos",
+            subtitle = if (locations.isEmpty()) null else "${locations.size} en línea",
+            data = locations,
+            error = null,
             onBack = { navigator.pop() },
-        ) { padding ->
-            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                if (latestLocations.isEmpty()) {
-                    AppEmptyState(
-                        icon = AppIcons.Map,
-                        title = "Sin técnicos en línea",
-                        message = "En cuanto un técnico comparta su ubicación, va a aparecer acá.",
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = Spacing.screen,
-                        verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                    ) {
-                        items(latestLocations.values.toList()) { loc ->
-                            AppCard {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    AppLeadingIcon(AppIcons.Location, tint = AppColors.Info)
-                                    Spacer(modifier = Modifier.width(Spacing.md))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            technicianNames[loc.technicianId] ?: "Técnico",
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.titleSmall,
-                                        )
-                                        Spacer(Modifier.width(2.dp))
-                                        Text(
-                                            "Lat ${formatCoord(loc.latitude)}, Lng ${formatCoord(loc.longitude)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = AppColors.TextMuted,
-                                        )
-                                        Text(
-                                            "Actualizado: ${formatTime(loc.recordedAt)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = AppColors.TextMuted,
-                                        )
-                                    }
-                                }
+            emptyIcon = AppIcons.Map,
+            emptyTitle = "Sin técnicos en línea",
+            emptyMessage = "En cuanto un técnico comparta su ubicación, va a aparecer acá.",
+        ) { list ->
+            items(list.size) { index ->
+                val loc = list[index]
+                AppCard(modifier = Modifier.appEnter(index)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppLeadingIcon(AppIcons.Location, tint = AppColors.Info)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    technicianNames[loc.technicianId] ?: "Técnico",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                AppLiveDot()
                             }
+                            Spacer(Modifier.width(2.dp))
+                            Text(
+                                "Lat ${formatCoord(loc.latitude)}, Lng ${formatCoord(loc.longitude)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AppColors.TextMuted,
+                            )
+                            Text(
+                                "Actualizado: ${formatTime(loc.recordedAt)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = AppColors.TextMuted,
+                            )
                         }
                     }
                 }

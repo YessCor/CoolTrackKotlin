@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.SlideTransition
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.features.notifications.NotificationsScreen
 import com.datasys.cooltrack.ui.components.AppIcons
@@ -47,7 +47,7 @@ class TechnicianShellScreen : Screen {
                 },
             ) { padding ->
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                    CurrentScreen()
+                    SlideTransition(navigator)
                 }
             }
         }

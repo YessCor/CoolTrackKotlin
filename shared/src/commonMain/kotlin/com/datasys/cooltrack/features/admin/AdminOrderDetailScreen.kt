@@ -58,13 +58,16 @@ import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppErrorState
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
-import com.datasys.cooltrack.ui.components.AppLoadingList
 import com.datasys.cooltrack.ui.components.AppModal
 import com.datasys.cooltrack.ui.components.AppQuoteStatusBadge
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
+import com.datasys.cooltrack.ui.components.AppStatusBadge
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.rememberAppToastState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -184,68 +187,49 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
             }
         }
 
-        AppScreenScaffold(
+        val order0 = order
+        AppHeroScaffold(
             title = "Detalle de Orden",
             onBack = { navigator.pop() },
-            actions = {
-                        val current = order
-                        if (current != null) {
-                            IconButton(onClick = {
-                                // Ver nota de clase: usa el usuario admin logueado como
-                                // "cliente" del reporte, igual que el original.
-                                val client = authRepository.state.value.user
-                                val content = PdfContentBuilder.forOrder(current, client)
-                                pdfService.previewOrderPdf(content, current.orderNumber)
-                            }) {
-                                Icon(imageVector = AppIcons.Document, contentDescription = "Exportar PDF")
-                            }
-                        }
-                        if (isUpdating) {
-                            Box(modifier = Modifier.padding(horizontal = 16.dp).size(20.dp)) {
-                                CircularProgressIndicator(strokeWidth = 2.dp)
-                            }
-                        }
-            },
-            snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            val current = order
-            when {
-                isLoading && current == null -> AppLoadingList(modifier = Modifier.padding(padding), count = 5)
-                current == null -> AppErrorState(
-                    message = "No pudimos encontrar esta orden.",
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                )
-                else -> Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                ) {
-                    // Header de estado
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(AppColors.Primary.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
-                            .border(1.dp, AppColors.Primary.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Orden #${current.orderNumber}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(current.statusLabel, color = AppColors.Secondary, fontWeight = FontWeight.Bold)
-                        }
-                        Icon(
-                            imageVector = AppIcons.Orders,
-                            contentDescription = null,
-                            tint = AppColors.Primary,
-                            modifier = Modifier.size(40.dp),
+            heroContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Detalle de Orden", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = 0.7f))
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Orden #${order0?.orderNumber ?: "…"}",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
+                    if (order0 != null) {
+                        IconButton(onClick = {
+                            val client = authRepository.state.value.user
+                            val content = PdfContentBuilder.forOrder(order0, client)
+                            pdfService.previewOrderPdf(content, order0.orderNumber)
+                        }) {
+                            Icon(AppIcons.Document, contentDescription = "Exportar PDF", tint = Color.White)
+                        }
+                    }
+                    if (isUpdating) {
+                        Box(Modifier.size(20.dp)) { CircularProgressIndicator(strokeWidth = 2.dp, color = Color.White) }
+                    }
+                }
+                if (order0 != null) {
+                    Spacer(Modifier.height(10.dp))
+                    AppStatusBadge(order0.status, large = true)
+                }
+            },
+            snackbarHost = { AppToastHost(toastState) },
+        ) {
+            val current = order
+            when {
+                isLoading && current == null -> Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    repeat(4) { AppSkeletonListCard() }
+                }
+                current == null -> AppErrorState(message = "No pudimos encontrar esta orden.", modifier = Modifier.fillMaxWidth())
+                else -> Column {
                     // Asignación de técnico
                     AppCard {
                         Row(

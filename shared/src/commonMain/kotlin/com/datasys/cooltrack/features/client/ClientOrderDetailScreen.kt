@@ -55,12 +55,13 @@ import com.datasys.cooltrack.models.formatMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppButtonVariant
 import com.datasys.cooltrack.ui.components.AppCard
+import com.datasys.cooltrack.ui.components.AppHeroScaffold
 import com.datasys.cooltrack.ui.components.AppIcons
-import com.datasys.cooltrack.ui.components.AppLoadingList
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppSkeletonListCard
 import com.datasys.cooltrack.ui.components.AppStatusBadge
 import com.datasys.cooltrack.ui.components.AppToastHost
 import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.appEnter
 import com.datasys.cooltrack.ui.components.formatShortDate
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
@@ -102,50 +103,43 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
             isLoading = false
         }
 
-        AppScreenScaffold(
+        val currentOrder0 = order
+        AppHeroScaffold(
             title = "Detalle de Orden",
             onBack = { navigator.pop() },
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
+            heroContent = {
+                Text("Detalle de Orden", style = MaterialTheme.typography.labelLarge, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f))
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Orden #${currentOrder0?.orderNumber ?: "…"}",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = androidx.compose.ui.graphics.Color.White,
+                )
+                if (currentOrder0 != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppStatusBadge(currentOrder0.status, large = true)
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            formatShortDate(currentOrder0.createdAt.toString()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.75f),
+                        )
+                    }
+                }
+            },
+        ) {
             if (isLoading) {
-                AppLoadingList(modifier = Modifier.padding(padding), count = 5)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    repeat(4) { AppSkeletonListCard() }
+                }
             } else {
                 order?.let { currentOrder ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding)
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        // Header con número de orden y estado
-                        AppCard {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column {
-                                    Text(
-                                        "Orden #${currentOrder.orderNumber}",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp,
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        formatShortDate(currentOrder.createdAt.toString()),
-                                        fontSize = 13.sp,
-                                        color = AppColors.TextMuted,
-                                    )
-                                }
-                                AppStatusBadge(currentOrder.status, large = true)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
+                    Column {
                         // Información del servicio
-                        AppCard {
+                        AppCard(modifier = Modifier.appEnter(0)) {
                             Column {
                                 Text("Servicio", fontWeight = FontWeight.SemiBold, color = AppColors.TextSecondary)
                                 Spacer(modifier = Modifier.height(4.dp))

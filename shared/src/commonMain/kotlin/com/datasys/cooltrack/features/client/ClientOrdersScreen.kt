@@ -1,7 +1,6 @@
 package com.datasys.cooltrack.features.client
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,21 +14,19 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceOrder
-import com.datasys.cooltrack.ui.components.AppAsyncContent
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppListScreen
 import com.datasys.cooltrack.ui.components.AppStatusBadge
-import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.appEnter
 import com.datasys.cooltrack.ui.components.formatCurrency
 import com.datasys.cooltrack.ui.components.formatShortDate
-import com.datasys.cooltrack.ui.components.staggeredItem
 import com.datasys.cooltrack.util.collectAsStateSimple
 import org.koin.compose.koinInject
 
 /**
- * Historial de órdenes para el cliente (Módulo 5d).
+ * Historial de órdenes para el cliente.
  */
 class ClientOrdersScreen : Screen {
     @Composable
@@ -53,55 +50,47 @@ class ClientOrdersScreen : Screen {
 
         LaunchedEffect(user?.id) { load() }
 
-        AppScreenScaffold(title = "Mis Servicios") { padding ->
-            AppAsyncContent(
-                data = orders,
-                error = error,
-                emptyIcon = AppIcons.Orders,
-                emptyTitle = "Aún no tienes servicios",
-                emptyMessage = "Cuando solicites un servicio, vas a poder seguirlo desde acá.",
-                modifier = Modifier.padding(padding),
-            ) { list ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = Spacing.screen,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        AppListScreen(
+            title = "Mis Servicios",
+            data = orders,
+            error = error,
+            emptyIcon = AppIcons.Orders,
+            emptyTitle = "Aún no tienes servicios",
+            emptyMessage = "Cuando solicites un servicio, vas a poder seguirlo desde acá.",
+        ) { list ->
+            itemsIndexed(list) { index, order ->
+                AppCard(
+                    modifier = Modifier.appEnter(index),
+                    onTap = { navigator.push(ClientOrderDetailScreen(order.id)) },
                 ) {
-                    itemsIndexed(list) { index, order ->
-                        AppCard(
-                            modifier = Modifier.staggeredItem(index),
-                            onTap = { navigator.push(ClientOrderDetailScreen(order.id)) },
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                AppLeadingIcon(AppIcons.Orders, tint = AppColors.forOrderStatus(order.status))
-                                Spacer(Modifier.width(Spacing.md))
-                                Column(Modifier.weight(1f)) {
-                                    Text("Orden #${order.orderNumber}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(order.serviceType, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
-                                }
-                                AppStatusBadge(order.status)
-                            }
-                            Spacer(Modifier.height(Spacing.md))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    formatShortDate(order.createdAt.toString()),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = AppColors.TextMuted,
-                                )
-                                order.totalAmount?.let {
-                                    Text(
-                                        formatCurrency(it),
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AppColors.Primary,
-                                    )
-                                }
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppLeadingIcon(AppIcons.Orders, tint = AppColors.forOrderStatus(order.status))
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Orden #${order.orderNumber}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Spacer(Modifier.height(2.dp))
+                            Text(order.serviceType, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
+                        }
+                        AppStatusBadge(order.status)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            formatShortDate(order.createdAt.toString()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = AppColors.TextMuted,
+                        )
+                        order.totalAmount?.let {
+                            Text(
+                                formatCurrency(it),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = AppColors.Secondary,
+                            )
                         }
                     }
                 }

@@ -1,7 +1,6 @@
 package com.datasys.cooltrack.features.tech
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,8 +18,7 @@ import com.datasys.cooltrack.ui.components.*
 import org.koin.compose.koinInject
 
 /**
- * Pantalla de listado de trabajos para el técnico (Módulo 5c).
- * Muestra las órdenes asignadas y pendientes de ejecución.
+ * Pantalla de listado de trabajos para el técnico.
  */
 class TechnicianJobsScreen : Screen {
     @Composable
@@ -44,51 +42,38 @@ class TechnicianJobsScreen : Screen {
 
         LaunchedEffect(user?.id) { load() }
 
-        AppScreenScaffold(
+        AppListScreen(
             title = "Mis Trabajos",
-            actions = { SyncIndicator() },
-        ) { padding ->
-            AppAsyncContent(
-                data = jobs,
-                error = error,
-                emptyIcon = AppIcons.Build,
-                emptyTitle = "No tienes trabajos asignados",
-                emptyMessage = "Cuando el administrador te asigne una orden, aparecerá aquí.",
-                modifier = Modifier.padding(padding),
-            ) { list ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = Spacing.screen,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+            subtitle = jobs?.let { "${it.size} asignados" },
+            data = jobs,
+            error = error,
+            emptyIcon = AppIcons.Build,
+            emptyTitle = "No tienes trabajos asignados",
+            emptyMessage = "Cuando el administrador te asigne una orden, aparecerá aquí.",
+            heroTrailing = { SyncIndicator() },
+        ) { list ->
+            itemsIndexed(list) { index, job ->
+                AppCard(
+                    modifier = Modifier.appEnter(index),
+                    onTap = { navigator.push(TechnicianJobDetailScreen(job.id)) },
                 ) {
-                    itemsIndexed(list) { index, job ->
-                        JobItem(job, Modifier.staggeredItem(index)) {
-                            navigator.push(TechnicianJobDetailScreen(job.id))
-                        }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AppLeadingIcon(AppIcons.Build, tint = AppColors.forOrderStatus(job.status))
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "Orden #${job.orderNumber}",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f),
+                        )
+                        AppStatusBadge(job.status)
                     }
+                    Spacer(Modifier.height(12.dp))
+                    IconLine(AppIcons.Location, job.address)
+                    Spacer(Modifier.height(4.dp))
+                    IconLine(AppIcons.Calendar, formatShortDate(job.scheduledDate?.toString()).takeIf { it != "—" } ?: "No programada")
                 }
             }
-        }
-    }
-
-    @Composable
-    private fun JobItem(job: ServiceOrder, modifier: Modifier = Modifier, onClick: () -> Unit) {
-        AppCard(modifier = modifier, onTap = onClick) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AppLeadingIcon(AppIcons.Build, tint = AppColors.forOrderStatus(job.status))
-                Spacer(Modifier.width(Spacing.md))
-                Text(
-                    "Orden #${job.orderNumber}",
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f),
-                )
-                AppStatusBadge(job.status)
-            }
-            Spacer(Modifier.height(Spacing.md))
-            IconLine(AppIcons.Location, job.address)
-            Spacer(Modifier.height(Spacing.xs))
-            IconLine(AppIcons.Calendar, formatShortDate(job.scheduledDate?.toString()).takeIf { it != "—" } ?: "No programada")
         }
     }
 
@@ -96,7 +81,7 @@ class TechnicianJobsScreen : Screen {
     private fun IconLine(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp), tint = AppColors.TextMuted)
-            Spacer(Modifier.width(Spacing.sm))
+            Spacer(Modifier.width(8.dp))
             Text(text, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary, maxLines = 1)
         }
     }

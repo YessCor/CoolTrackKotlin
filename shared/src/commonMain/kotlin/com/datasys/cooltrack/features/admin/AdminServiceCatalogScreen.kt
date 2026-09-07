@@ -1,14 +1,10 @@
 package com.datasys.cooltrack.features.admin
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -28,18 +24,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceCatalog
-import com.datasys.cooltrack.ui.components.AppAsyncContent
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
-import com.datasys.cooltrack.ui.components.AppScreenScaffold
+import com.datasys.cooltrack.ui.components.AppListScreen
 import com.datasys.cooltrack.ui.components.AppToastHost
-import com.datasys.cooltrack.ui.components.Spacing
+import com.datasys.cooltrack.ui.components.appEnter
 import com.datasys.cooltrack.ui.components.formatCurrency
-import com.datasys.cooltrack.ui.components.staggeredItem
 import com.datasys.cooltrack.ui.components.rememberAppToastState
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -48,6 +45,7 @@ import org.koin.compose.koinInject
 class AdminServiceCatalogScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val adminRepository: AdminRepository = koinInject()
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
@@ -67,52 +65,43 @@ class AdminServiceCatalogScreen : Screen {
 
         LaunchedEffect(Unit) { load() }
 
-        AppScreenScaffold(
+        AppListScreen(
             title = "Catálogo de Servicios",
+            data = catalog,
+            error = errorMessage,
+            onBack = if (navigator.canPop) ({ navigator.pop() }) else null,
+            emptyIcon = AppIcons.Catalog,
+            emptyTitle = "Catálogo vacío",
+            emptyMessage = "Aún no hay servicios cargados en el catálogo.",
             snackbarHost = { AppToastHost(toastState) },
-        ) { padding ->
-            AppAsyncContent(
-                data = catalog,
-                error = errorMessage,
-                emptyIcon = AppIcons.Catalog,
-                emptyTitle = "Catálogo vacío",
-                emptyMessage = "Aún no hay servicios cargados en el catálogo.",
-                modifier = Modifier.padding(padding),
-            ) { list ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = Spacing.screen,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) { list ->
+            itemsIndexed(list) { index, item ->
+                AppCard(
+                    modifier = Modifier.appEnter(index),
+                    onTap = { editingItem = item },
                 ) {
-                    itemsIndexed(list) { index, item ->
-                        AppCard(
-                            modifier = Modifier.staggeredItem(index),
-                            onTap = { editingItem = item },
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                AppLeadingIcon(AppIcons.Catalog, tint = AppColors.Secondary)
-                                Spacer(Modifier.width(Spacing.md))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(item.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
-                                    Text(
-                                        item.description ?: "Sin descripción",
-                                        color = AppColors.TextMuted,
-                                        style = MaterialTheme.typography.bodySmall,
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        formatCurrency(item.basePrice),
-                                        color = AppColors.Secondary,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleSmall,
-                                    )
-                                    Text(item.unit, style = MaterialTheme.typography.labelSmall, color = AppColors.TextMuted)
-                                }
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AppLeadingIcon(AppIcons.Catalog, tint = AppColors.Secondary)
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(item.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                item.description ?: "Sin descripción",
+                                color = AppColors.TextMuted,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                formatCurrency(item.basePrice),
+                                color = AppColors.Secondary,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleSmall,
+                            )
+                            Text(item.unit, style = MaterialTheme.typography.labelSmall, color = AppColors.TextMuted)
                         }
                     }
                 }
