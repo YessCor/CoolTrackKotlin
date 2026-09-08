@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navy-índigo de marca (AppColors.Primary) — fondo del splash. -->
+    <color name="brand_navy">#1E1B4B</color>
+    <color name="brand_indigo">#4F46E5</color>
+</resources>

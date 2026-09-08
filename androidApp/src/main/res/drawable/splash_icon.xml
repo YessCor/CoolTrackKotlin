@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copo de nieve blanco para el splash. Lienzo de 288 (la SplashScreen API
+     lo centra en un círculo); el copo ocupa el tercio central. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+    <group android:pivotX="144" android:pivotY="144" android:scaleX="1.9" android:scaleY="1.9">
+        <group android:rotation="0" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <group android:rotation="60" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <group android:rotation="120" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <group android:rotation="180" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <group android:rotation="240" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <group android:rotation="300" android:pivotX="144" android:pivotY="144">
+            <path android:pathData="M144,144 L144,102 M144,116 L132.5,104.5 M144,116 L155.5,104.5"
+                android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" />
+        </group>
+        <path android:pathData="M144,144 m-7,0 a7,7 0,1 1,14 0 a7,7 0,1 1,-14 0z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
+</vector>

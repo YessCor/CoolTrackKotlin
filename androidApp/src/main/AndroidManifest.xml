@@ -13,6 +13,8 @@
         android:fullBackupContent="@xml/backup_rules"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Cooltrack"
         android:theme="@style/Theme.Cooltrack"
         tools:targetApi="33">
@@ -21,7 +23,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:excludeFromRecents="false"
-            android:theme="@style/Theme.Cooltrack">
+            android:theme="@style/Theme.Cooltrack.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

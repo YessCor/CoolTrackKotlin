@@ -1,3 +1,14 @@
 <resources>
+
     <style name="Theme.Cooltrack" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash (androidx.core:core-splashscreen). Se muestra mientras el
+         proceso arranca y hasta que MainActivity libera la condición. -->
+    <style name="Theme.Cooltrack.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_navy</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.Cooltrack</item>
+    </style>
+
 </resources>
