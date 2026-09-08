@@ -65,7 +65,8 @@ object ApiClient {
                 connectTimeoutMillis = 30_000
             }
             install(Logging) {
-                level = LogLevel.INFO // equivalente a los prints con kDebugMode
+                // Sin logs de red en release: evita filtrar tokens/headers a logcat.
+                level = if (AppConfig.isDebug) LogLevel.INFO else LogLevel.NONE
             }
             defaultRequest {
                 url(AppConfig.apiBaseUrl)

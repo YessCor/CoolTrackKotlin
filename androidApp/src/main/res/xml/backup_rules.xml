@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android < 12 (fullBackupContent). No respaldar nada de la app:
+     evita que `adb backup` o Auto Backup saquen la sesión, la DB offline
+     (con datos de clientes en caché) o las preferencias cifradas. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="root" path="." />
+</full-backup-content>

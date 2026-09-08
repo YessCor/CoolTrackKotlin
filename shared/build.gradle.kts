@@ -128,9 +128,12 @@ android {
         }
         fun secret(key: String) = localProps.getProperty(key) ?: System.getenv(key) ?: ""
 
+        // Nota: la ANON KEY de Supabase es pública por diseño — la seguridad
+        // real está en las políticas RLS + la Edge Function `secure-db`.
+        // La API key/secret de Cloudinary NO se inyecta: se usa un
+        // "unsigned upload preset", que es lo único que el cliente necesita.
         buildConfigField("String", "SUPABASE_URL", "\"${secret("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${secret("SUPABASE_ANON_KEY")}\"")
-        buildConfigField("String", "CLOUDINARY_API_KEY", "\"${secret("CLOUDINARY_API_KEY")}\"")
         buildConfigField("String", "CLOUDINARY_CLOUD_NAME", "\"${secret("CLOUDINARY_CLOUD_NAME")}\"")
         buildConfigField("String", "CLOUDINARY_UPLOAD_PRESET", "\"${secret("CLOUDINARY_UPLOAD_PRESET")}\"")
     }

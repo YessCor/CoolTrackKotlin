@@ -21,6 +21,7 @@ import com.datasys.cooltrack.services.SyncService
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.functions.Functions
+import io.github.jan.supabase.logging.LogLevel
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
@@ -40,6 +41,8 @@ val sharedModule = module {
             supabaseUrl = AppConfig.supabaseUrl,
             supabaseKey = AppConfig.supabaseAnonKey,
         ) {
+            // Sin logs de supabase-kt en release (no filtrar requests/JWT a logcat).
+            defaultLogLevel = if (AppConfig.isDebug) LogLevel.INFO else LogLevel.NONE
             install(Auth)
             install(Postgrest)
             install(Realtime)

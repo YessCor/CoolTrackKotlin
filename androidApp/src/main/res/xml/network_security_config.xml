@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!-- Todo el tráfico debe ir por HTTPS. Sin excepciones de texto en claro. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+      Certificate pinning (opcional, defensa en profundidad contra MITM con
+      un CA de usuario/proxy). Está COMENTADO porque si Supabase/Cloudinary
+      rotan su cadena de certificados y no actualizás el pin a tiempo, la app
+      deja de conectar. Para activarlo:
+        1. Obtené el pin (SHA-256 de la SubjectPublicKeyInfo) de cada host:
+           openssl s_client -connect ycblykplwavtrmhggmgf.supabase.co:443 </dev/null \
+             | openssl x509 -pubkey -noout \
+             | openssl pkey -pubin -outform der \
+             | openssl dgst -sha256 -binary | openssl enc -base64
+        2. Poné 2 pines por host (el activo + uno de respaldo).
+        3. Descomentá los bloques.
+
+    <domain-config>
+        <domain includeSubdomains="true">supabase.co</domain>
+        <pin-set expiration="2027-01-01">
+            <pin digest="SHA-256">REEMPLAZAR_PIN_PRIMARIO=</pin>
+            <pin digest="SHA-256">REEMPLAZAR_PIN_BACKUP=</pin>
+        </pin-set>
+    </domain-config>
+    <domain-config>
+        <domain includeSubdomains="true">cloudinary.com</domain>
+        <pin-set expiration="2027-01-01">
+            <pin digest="SHA-256">REEMPLAZAR_PIN_PRIMARIO=</pin>
+            <pin digest="SHA-256">REEMPLAZAR_PIN_BACKUP=</pin>
+        </pin-set>
+    </domain-config>
+    -->
+
+</network-security-config>

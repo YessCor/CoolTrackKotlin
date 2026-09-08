@@ -9,8 +9,12 @@ package com.datasys.cooltrack.core
 expect object AppConfig {
     val supabaseUrl: String
     val supabaseAnonKey: String
-    val cloudinaryApiKey: String
+    // Subida de imágenes a Cloudinary con "unsigned upload preset": el
+    // cliente NO necesita (ni debe llevar) la API key / secret de Cloudinary.
     val cloudinaryCloudName: String
     val cloudinaryUploadPreset: String
     val apiBaseUrl: String
+
+    /** true solo en builds de desarrollo — apaga logs de red en release. */
+    val isDebug: Boolean
 }
