@@ -95,10 +95,10 @@ object PdfContentBuilder {
         clientPhone = client?.phone,
         clientAddress = client?.address,
         rows = (quote.items ?: emptyList()).map(::toRow),
-        subtotal = formatCurrency(quote.subtotal),
+        subtotal = formatCurrency(quote.effectiveSubtotal),
         taxLabel = "IVA (${(quote.taxRate * 100).toInt()}%)",
-        taxAmount = formatCurrency(quote.taxAmount),
-        total = formatCurrency(quote.total),
+        taxAmount = formatCurrency(quote.effectiveTax),
+        total = formatCurrency(quote.effectiveTotal),
         notes = quote.notes?.takeIf { it.isNotBlank() },
     )
 

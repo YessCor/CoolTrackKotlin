@@ -1,6 +1,7 @@
 package com.datasys.cooltrack.features.admin
 
 import com.datasys.cooltrack.core.OrderStatus
+import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.core.UserRole
 import com.datasys.cooltrack.core.secureDelete
 import com.datasys.cooltrack.core.secureInsert
@@ -41,7 +42,24 @@ class AdminRepository(private val supabase: SupabaseClient) {
     private data class IdRow(val id: String)
 
     @Serializable
-    private data class AmountRow(@SerialName("total_amount") val totalAmount: Double? = null)
+    private data class CompletedRevenueRow(
+        val id: String? = null,
+        @SerialName("total_amount") val totalAmount: Double? = null,
+    )
+
+    @Serializable
+    private data class QuoteRevenueRow(
+        @SerialName("order_id") val orderId: String? = null,
+        val total: Double? = null,
+        @SerialName("tax_rate") val taxRate: Double? = null,
+        val items: List<QuoteRevenueItem>? = null,
+    )
+
+    @Serializable
+    private data class QuoteRevenueItem(
+        val quantity: Double? = null,
+        @SerialName("unit_price") val unitPrice: Double? = null,
+    )
 
     @Serializable
     private data class RatingRow(@SerialName("client_rating") val clientRating: Int? = null)
@@ -78,10 +96,35 @@ class AdminRepository(private val supabase: SupabaseClient) {
             .decodeList<IdRow>()
             .size
 
-        val revenueRows = supabase.from("service_orders")
-            .select(Columns.list("total_amount")) { filter { eq("status", OrderStatus.COMPLETED.value) } }
-            .decodeList<AmountRow>()
-        val totalRevenue = revenueRows.sumOf { it.totalAmount ?: 0.0 }
+        // Ingresos: toda cotización aprobada cuenta como ingreso (esté vinculada o
+        // no a una orden), y las órdenes completadas aportan su `total_amount`
+        // solo cuando NO tienen una cotización aprobada — así nunca queda en
+        // $0 por trabajos aprobados/completados y no se duplican montos.
+        val completedRows = supabase.from("service_orders")
+            .select(Columns.list("id,total_amount")) { filter { eq("status", OrderStatus.COMPLETED.value) } }
+            .decodeList<CompletedRevenueRow>()
+        val approvedQuotes = supabase.from("quotes")
+            .select(Columns.raw("order_id,total,tax_rate,items:quote_items(quantity,unit_price)")) { filter { eq("status", QuoteStatus.APPROVED.value) } }
+            .decodeList<QuoteRevenueRow>()
+        val approvedOrderIds = approvedQuotes.mapNotNull { it.orderId }.toSet()
+
+        // Total efectivo de una cotización aprobada: si el persisted quedó en 0
+        // (datos creados antes del fix de precios) se recalcula desde los ítems.
+        fun approvedQuoteTotal(q: QuoteRevenueRow): Double {
+            val stored = q.total ?: 0.0
+            if (stored > 0) return stored
+            val subtotal = q.items?.sumOf { (it.quantity ?: 0.0) * (it.unitPrice ?: 0.0) } ?: 0.0
+            if (subtotal <= 0) return 0.0
+            val rate = q.taxRate ?: 16.0
+            val percent = if (rate > 1) rate else rate * 100.0
+            return subtotal + subtotal * percent / 100.0
+        }
+
+        val totalRevenue =
+            approvedQuotes.sumOf(::approvedQuoteTotal) +
+                completedRows
+                    .filter { it.id != null && it.id !in approvedOrderIds }
+                    .sumOf { it.totalAmount ?: 0.0 }
 
         // El original filtra en la query con `.not('client_rating', 'is', null)`;
         // acá se decodifica todo y se descartan los null con `mapNotNull`
@@ -282,7 +325,7 @@ class AdminRepository(private val supabase: SupabaseClient) {
     /** Obtener cotizaciones vinculadas a una orden específica. */
     suspend fun getQuotesForOrder(orderId: String): List<Quote> =
         supabase.from("quotes")
-            .select(Columns.ALL) {
+            .select(Columns.raw("*, items:quote_items(*)")) {
                 filter { eq("order_id", orderId) }
                 order("created_at", order = Order.DESCENDING)
             }

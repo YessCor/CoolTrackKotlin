@@ -45,6 +45,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.auth.AuthRepository
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.core.OrderStatus
+import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.models.Equipment
 import com.datasys.cooltrack.models.Quote
 import com.datasys.cooltrack.models.ServiceOrder
@@ -344,12 +345,45 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                                     Column {
                                         Text("Cotización #${quote.quoteNumber}", fontWeight = FontWeight.Bold)
                                         Text(
-                                            "Total: ${formatMoney(quote.total)}",
+                                            "Total: ${quote.formattedTotal}",
                                             color = AppColors.Primary,
                                             fontSize = 14.sp
                                         )
                                     }
                                     AppQuoteStatusBadge(quote.status)
+                                }
+                            }
+                        }
+                    }
+
+                    // Monto / ingreso registrado: usa el total_amount de la orden (ahora se
+                    // llena al aprobar la cotización) o, si todavía no se
+                    // registró, el total de la cotización aprobada. Un
+                    // total_amount en 0 se trata como "no registrado".
+                    val orderTotal = (current.totalAmount?.takeIf { it > 0 })
+                        ?: quotes.find { it.status == QuoteStatus.APPROVED }?.effectiveTotal
+                    if (orderTotal != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        AppCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    if (current.totalAmount != null) "Ingreso registrado" else "Total acordado",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                )
+                                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("Total del trabajo", fontWeight = FontWeight.Medium)
+                                    Text(
+                                        formatMoney(orderTotal),
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = AppColors.Primary,
+                                        fontSize = 24.sp,
+                                    )
                                 }
                             }
                         }

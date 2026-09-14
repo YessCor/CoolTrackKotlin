@@ -55,7 +55,7 @@ class ClientRepository(private val supabase: SupabaseClient) {
     /** Obtener cotizaciones del cliente para una orden específica. */
     suspend fun getQuotesForOrder(orderId: String): List<Quote> =
         supabase.from("quotes")
-            .select(Columns.ALL) {
+            .select(Columns.raw("*, items:quote_items(*)")) {
                 filter { eq("order_id", orderId) }
                 order("created_at", order = io.github.jan.supabase.postgrest.query.Order.DESCENDING)
             }

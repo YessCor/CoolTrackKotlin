@@ -132,7 +132,7 @@ data class ClientQuoteDetailScreen(val quoteId: String) : Screen {
                             Column {
                                 SummaryRow("Subtotal", q.formattedSubtotal)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                SummaryRow("IVA (${(q.taxRate * 100).toInt()}%)", q.formattedTax)
+                                SummaryRow("IVA (${q.taxRatePercent.toInt()}%)", q.formattedTax)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                                 SummaryRow("TOTAL", q.formattedTotal, isBold = true)
                             }

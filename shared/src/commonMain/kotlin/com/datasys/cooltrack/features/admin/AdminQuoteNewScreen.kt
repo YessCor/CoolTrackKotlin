@@ -53,6 +53,7 @@ import com.datasys.cooltrack.models.ServiceCatalog
 import com.datasys.cooltrack.models.ServiceOrder
 import com.datasys.cooltrack.models.User
 import com.datasys.cooltrack.models.formatMoney
+import com.datasys.cooltrack.models.parseMoney
 import com.datasys.cooltrack.ui.components.AppButton
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
@@ -98,7 +99,7 @@ private class QuoteItemRowState {
     var quantity by mutableStateOf("1")
     var unitPrice by mutableStateOf("0")
 
-    val total: Double get() = (quantity.toDoubleOrNull() ?: 0.0) * (unitPrice.toDoubleOrNull() ?: 0.0)
+    val total: Double get() = (parseMoney(quantity) ?: 1.0) * (parseMoney(unitPrice) ?: 0.0)
 }
 
 /**
@@ -160,6 +161,10 @@ class AdminQuoteNewScreen(
                 if (hasEmptyDescription) toastState.showError("Complete la descripción de todos los items")
                 return
             }
+            if (total <= 0) {
+                toastState.showError("El total es $0 — revisá los precios y cantidades de los ítems")
+                return
+            }
 
             scope.launch {
                 isSaving = true
@@ -186,8 +191,8 @@ class AdminQuoteNewScreen(
                             put("quote_id", quoteId)
                             item.catalogItemId?.let { put("catalog_item_id", it) }
                             put("description", item.description)
-                            put("quantity", item.quantity.toDoubleOrNull() ?: 1.0)
-                            put("unit_price", item.unitPrice.toDoubleOrNull() ?: 0.0)
+                            put("quantity", parseMoney(item.quantity) ?: 1.0)
+                            put("unit_price", parseMoney(item.unitPrice) ?: 0.0)
                             put("total", item.total)
                         }
                         supabase.secureInsert<JsonObject>("quote_items", itemJson)

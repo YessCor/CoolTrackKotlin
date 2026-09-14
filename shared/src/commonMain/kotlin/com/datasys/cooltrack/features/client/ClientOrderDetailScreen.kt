@@ -361,8 +361,11 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                             }
                         }
 
-                        // Monto total (del pedido o de la cotización aprobada)
-                        val finalTotal = currentOrder.totalAmount ?: quotes.find { it.status == QuoteStatus.APPROVED }?.total
+                        // Monto total (del pedido o de la cotización aprobada). Un total_amount en
+                        // 0 se trata como "no registrado" para no enmascarar el
+                        // total de una cotización aprobada.
+                        val finalTotal = (currentOrder.totalAmount?.takeIf { it > 0 })
+                            ?: quotes.find { it.status == QuoteStatus.APPROVED }?.effectiveTotal
                         if (finalTotal != null) {
                             Spacer(modifier = Modifier.height(24.dp))
                             AppCard(

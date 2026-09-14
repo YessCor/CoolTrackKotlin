@@ -263,7 +263,25 @@ Deno.serve(async (req) => {
       const v = pick(one(), CLIENT_QUOTE_UPDATE);
       if (v.status !== "approved" && v.status !== "rejected") return deny("Solo podés aprobar o rechazar");
       values = v;
-      return await run();
+      // Primero se aprueba/rechaza la cotización.
+      const quoteResult = await run();
+      if (quoteResult.status !== 200) return quoteResult;
+      // Después, best-effort: si se aprobó una cotización vinculada a una
+      // orden, registrar el total acordado en `service_orders.total_amount`
+      // (alimenta los ingresos del dashboard y reportes). Si falla, no se
+      // bloquea la aprobación.
+      if (v.status === "approved" && row.order_id) {
+        const quoted = row.total as number | string | null | undefined;
+        const total = typeof quoted === "number" ? quoted
+          : typeof quoted === "string" && quoted !== "" ? Number(quoted) : NaN;
+        if (!Number.isNaN(total)) {
+          await admin
+            .from("service_orders")
+            .update({ total_amount: total })
+            .eq("id", row.order_id);
+        }
+      }
+      return quoteResult;
     }
 
     // ---------- quote_items ----------

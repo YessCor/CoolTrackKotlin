@@ -30,6 +30,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceCatalog
+import com.datasys.cooltrack.models.parseMoney
 import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppLeadingIcon
@@ -120,12 +121,12 @@ class AdminServiceCatalogScreen : Screen {
                         onValueChange = { priceText = it },
                         label = { Text("Precio Base") },
                         prefix = { Text("$ ") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     )
                 },
                 confirmButton = {
                     Button(onClick = {
-                        val newPrice = priceText.toDoubleOrNull()
+                        val newPrice = parseMoney(priceText)
                         if (newPrice != null) {
                             scope.launch {
                                 try {
@@ -136,6 +137,8 @@ class AdminServiceCatalogScreen : Screen {
                                     toastState.showError("Error: ${e.message}")
                                 }
                             }
+                        } else {
+                            scope.launch { toastState.showError("Ingresá un precio válido (ej: 1500 o 1500,50)") }
                         }
                     }) { Text("Guardar") }
                 },

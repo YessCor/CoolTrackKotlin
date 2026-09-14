@@ -1,5 +1,6 @@
 package com.datasys.cooltrack.features.admin
 
+import com.datasys.cooltrack.core.QuoteStatus
 import com.datasys.cooltrack.core.UserRole
 import com.datasys.cooltrack.core.secureSelect
 import com.datasys.cooltrack.models.User
@@ -47,8 +48,23 @@ class ReportsRepository(private val supabase: SupabaseClient) {
 
     @Serializable
     private data class RevenueRow(
+        val id: String? = null,
         @SerialName("service_type") val serviceType: String? = null,
         @SerialName("total_amount") val totalAmount: Double? = null,
+    )
+
+    @Serializable
+    private data class QuoteRevenueRow(
+        @SerialName("order_id") val orderId: String? = null,
+        val total: Double? = null,
+        @SerialName("tax_rate") val taxRate: Double? = null,
+        val items: List<QuoteRevenueItem>? = null,
+    )
+
+    @Serializable
+    private data class QuoteRevenueItem(
+        val quantity: Double? = null,
+        @SerialName("unit_price") val unitPrice: Double? = null,
     )
 
     suspend fun getReports(): ReportsData {
@@ -94,16 +110,55 @@ class ReportsRepository(private val supabase: SupabaseClient) {
             )
         }
 
-        val revenueRows = supabase.secureSelect<List<RevenueRow>>(
+        // Ingresos por servicio:
+        //   - Toda cotización aprobada cuenta, agrupada por el tipo de servicio
+        //     de su orden vinculada (o "Sin orden" si no tiene).
+        //   - Las órdenes completadas aportan su `total_amount` solo si no
+        //     tienen una cotización aprobada (evita duplicar).
+        val orders = supabase.secureSelect<List<RevenueRow>>(
+            "service_orders",
+            columns = "id,service_type",
+        )
+        val serviceTypeById = orders.associate { it.id to (it.serviceType ?: "Otros") }
+
+        val approvedQuotes = supabase.secureSelect<List<QuoteRevenueRow>>(
+            "quotes",
+            match = mapOf("status" to JsonPrimitive(QuoteStatus.APPROVED.value)),
+            columns = "order_id,total,tax_rate,items:quote_items(quantity,unit_price)",
+        )
+        val approvedOrderIds = approvedQuotes.mapNotNull { it.orderId }.toSet()
+
+        // Total efectivo de una cotización aprobada: si el persisted quedó en 0
+        // (datos creados antes del fix de precios) se recalcula desde los ítems.
+        fun approvedQuoteTotal(q: QuoteRevenueRow): Double {
+            val stored = q.total ?: 0.0
+            if (stored > 0) return stored
+            val subtotal = q.items?.sumOf { (it.quantity ?: 0.0) * (it.unitPrice ?: 0.0) } ?: 0.0
+            if (subtotal <= 0) return 0.0
+            val rate = q.taxRate ?: 16.0
+            val percent = if (rate > 1) rate else rate * 100.0
+            return subtotal + subtotal * percent / 100.0
+        }
+
+        val completedWithAmount = supabase.secureSelect<List<RevenueRow>>(
             "service_orders",
             match = mapOf("status" to JsonPrimitive("completed")),
-            columns = "service_type,total_amount",
+            columns = "id,service_type,total_amount",
         )
 
         val revenueMap = mutableMapOf<String, Double>()
-        for (row in revenueRows) {
-            val type = row.serviceType ?: "Otros"
-            revenueMap[type] = (revenueMap[type] ?: 0.0) + (row.totalAmount ?: 0.0)
+        for (quote in approvedQuotes) {
+            val type = quote.orderId?.let { serviceTypeById[it] } ?: "Sin orden"
+            revenueMap[type] = (revenueMap[type] ?: 0.0) + approvedQuoteTotal(quote)
+        }
+        for (row in completedWithAmount) {
+            if (row.id != null && row.id !in approvedOrderIds) {
+                val amount = row.totalAmount ?: 0.0
+                if (amount > 0.0) {
+                    val type = row.serviceType ?: "Otros"
+                    revenueMap[type] = (revenueMap[type] ?: 0.0) + amount
+                }
+            }
         }
         val revenues = revenueMap.map { (type, amount) -> RevenueByService(type, amount) }
 
