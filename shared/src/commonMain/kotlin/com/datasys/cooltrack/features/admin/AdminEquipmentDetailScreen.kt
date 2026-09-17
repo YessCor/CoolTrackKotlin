@@ -157,11 +157,7 @@ class AdminEquipmentDetailScreen(private val equipmentId: String) : Screen {
                         actionIconContentColor = Color.White,
                         navigationIconContentColor = Color.White,
                     ),
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(imageVector = AppIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                     actions = {
                         IconButton(onClick = { isEditing = !isEditing }) {
                             Icon(

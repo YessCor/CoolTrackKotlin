@@ -4,6 +4,7 @@ import com.datasys.cooltrack.core.OrderStatus
 import com.datasys.cooltrack.core.UserRole
 import com.datasys.cooltrack.core.secureDelete
 import com.datasys.cooltrack.core.secureInsert
+import com.datasys.cooltrack.core.secureOp
 import com.datasys.cooltrack.core.secureSelect
 import com.datasys.cooltrack.core.secureUpdate
 import com.datasys.cooltrack.models.Client
@@ -166,34 +167,39 @@ class AdminRepository(private val supabase: SupabaseClient) {
     }
 
     /**
-     * Crea el perfil del cliente en `public.users` vía la Edge Function
-     * `secure-db` (admin-only). No crea una cuenta de Supabase Auth — eso
-     * requiere `service_role`, que solo vive del lado de la función, nunca
-     * en el cliente — mismo comportamiento que el endpoint REST original,
-     * que tampoco pedía contraseña para este flujo.
+     * Crea el perfil del cliente en `public.users` y en Auth vía la Edge Function `secure-db`
      */
-    suspend fun createClient(name: String, email: String, phone: String?, address: String?): Client =
-        supabase.secureInsert(
-            "users",
-            buildJsonObject {
+    suspend fun createClient(name: String, email: String, password: String, phone: String?, address: String?): Client =
+        supabase.secureOp(
+            op = "create_user_with_auth",
+            values = buildJsonObject {
                 put("name", name)
                 put("email", email)
+                put("password", password)
                 put("role", UserRole.CLIENT.value)
                 phone?.takeIf { it.isNotBlank() }?.let { put("phone", it) }
                 address?.takeIf { it.isNotBlank() }?.let { put("address", it) }
             },
         )
 
-    suspend fun updateClient(id: String, name: String, email: String?, phone: String?, address: String?) {
-        supabase.secureUpdate(
-            "users",
-            buildJsonObject {
+    suspend fun updateClientWithAuth(id: String, name: String, email: String?, password: String?, phone: String?, address: String?) {
+        supabase.secureOp<Client>(
+            op = "update_user_with_auth",
+            values = buildJsonObject {
+                put("id", id)
                 put("name", name)
-                email?.let { put("email", it) }
+                email?.takeIf { it.isNotBlank() }?.let { put("email", it) }
+                password?.takeIf { it.isNotBlank() }?.let { put("password", it) }
                 phone?.let { put("phone", it) }
                 address?.let { put("address", it) }
             },
-            match = mapOf("id" to JsonPrimitive(id)),
+        )
+    }
+
+    suspend fun deleteUser(id: String) {
+        supabase.secureOp<JsonElement>(
+            op = "delete_user_with_auth",
+            values = buildJsonObject { put("id", id) },
         )
     }
 
@@ -204,23 +210,32 @@ class AdminRepository(private val supabase: SupabaseClient) {
         supabase.secureSelect("users", match = mapOf("role" to JsonPrimitive(UserRole.TECHNICIAN.value)))
 
     /**
-     * Crea solo el perfil del técnico en `public.users` (mismo límite que
-     * [createClient]: crear la cuenta de Auth con contraseña requiere
-     * `service_role`, disponible solo dentro de la Edge Function, y crear
-     * cuentas de acceso para terceros es una decisión de producto que se
-     * dejó fuera de esta función a propósito — ver comentario en
-     * `secure-db/index.ts`).
+     * Crea el perfil del técnico en `public.users` y en Auth.
      */
-    suspend fun createTechnicianProfile(name: String, email: String, phone: String?): User =
-        supabase.secureInsert(
-            "users",
-            buildJsonObject {
+    suspend fun createTechnicianProfile(name: String, email: String, password: String, phone: String?): User =
+        supabase.secureOp(
+            op = "create_user_with_auth",
+            values = buildJsonObject {
                 put("name", name)
                 put("email", email)
+                put("password", password)
                 put("role", UserRole.TECHNICIAN.value)
                 phone?.takeIf { it.isNotBlank() }?.let { put("phone", it) }
             },
         )
+
+    suspend fun updateTechnicianWithAuth(id: String, name: String, email: String?, password: String?, phone: String?) {
+        supabase.secureOp<User>(
+            op = "update_user_with_auth",
+            values = buildJsonObject {
+                put("id", id)
+                put("name", name)
+                email?.takeIf { it.isNotBlank() }?.let { put("email", it) }
+                password?.takeIf { it.isNotBlank() }?.let { put("password", it) }
+                phone?.let { put("phone", it) }
+            },
+        )
+    }
 
     // --- Equipos --------------------------------------------------------------
 

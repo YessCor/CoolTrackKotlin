@@ -33,6 +33,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.ServiceCatalog
 import com.datasys.cooltrack.ui.components.AppTopBar
@@ -47,6 +49,7 @@ import org.koin.compose.koinInject
 class AdminServiceCatalogScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val adminRepository: AdminRepository = koinInject()
         val scope = rememberCoroutineScope()
         val toastState = rememberAppToastState()
@@ -68,7 +71,8 @@ class AdminServiceCatalogScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Catálogo de Servicios") }) },
+                    expandedHeight = 44.dp,title = { Text("Catálogo de Servicios") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {

@@ -129,6 +129,7 @@ class AdminEquipmentNewScreen(private val clientId: String? = null) : Screen {
                         containerColor = AppColors.Primary,
                         titleContentColor = Color.White,
                     ),
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                 )
             },
             snackbarHost = { AppToastHost(toastState) },

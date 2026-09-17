@@ -26,7 +26,7 @@ class TechnicianShellScreen : Screen {
         val authRepository: AuthRepository = koinInject()
         val scope = rememberCoroutineScope()
 
-        Navigator(TechnicianJobsScreen()) { navigator ->
+        Navigator(TechnicianDashboardScreen()) { navigator ->
             val current = navigator.lastItem
             AppShellScaffold(
                 tabs = TechTab.entries.map { tab ->
@@ -61,13 +61,15 @@ private enum class TechTab(
     val filledIcon: androidx.compose.ui.graphics.vector.ImageVector,
     val screen: () -> Screen,
 ) {
-    JOBS(0, "Trabajos", AppIcons.Orders, AppIcons.OrdersFilled, { TechnicianJobsScreen() }),
-    NOTIFICATIONS(1, "Notificaciones", AppIcons.Notifications, AppIcons.NotificationsFilled, { NotificationsScreen() }),
-    LOGOUT(2, "Salir", AppIcons.Logout, AppIcons.Logout, { TechnicianJobsScreen() }),
+    HOME(0, "Inicio", AppIcons.Home, AppIcons.HomeFilled, { TechnicianDashboardScreen() }),
+    JOBS(1, "Trabajos", AppIcons.Orders, AppIcons.OrdersFilled, { TechnicianJobsScreen() }),
+    NOTIFICATIONS(2, "Notificaciones", AppIcons.Notifications, AppIcons.NotificationsFilled, { NotificationsScreen() }),
+    LOGOUT(3, "Salir", AppIcons.Logout, AppIcons.Logout, { TechnicianDashboardScreen() }),
 }
 
 private fun tabIndexFor(screen: Screen): Int = when (screen) {
-    is TechnicianJobsScreen, is TechnicianJobDetailScreen -> 0
-    is NotificationsScreen -> 1
+    is TechnicianDashboardScreen -> 0
+    is TechnicianJobsScreen, is TechnicianJobDetailScreen -> 1
+    is NotificationsScreen -> 2
     else -> 0
 }

@@ -100,11 +100,7 @@ data class ClientEquipmentNewScreen(val existingEquipment: Equipment? = null) : 
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text(if (isEditing) "Editar Equipo" else "Nuevo Equipo") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
+                    navigationIcon = { ClientHomeNavigationIcon(navigator) },
                     actions = {
                         if (isEditing) {
                             IconButton(onClick = { showDeleteDialog = true }) {

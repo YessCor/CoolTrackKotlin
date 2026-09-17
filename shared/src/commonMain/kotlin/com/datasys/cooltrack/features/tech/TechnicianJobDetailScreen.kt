@@ -102,11 +102,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    }
+                    navigationIcon = { TechnicianHomeNavigationIcon(navigator) }
                 )
             },
             snackbarHost = { AppToastHost(toastState) }
@@ -117,6 +113,7 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                 }
             } else {
                 order?.let { currentOrder ->
+                    val isClosed = currentOrder.status == OrderStatus.COMPLETED || currentOrder.status == OrderStatus.CANCELLED
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -199,26 +196,29 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                     placeholder = { Text("Agrega notas sobre el trabajo realizado...") },
                                     minLines = 3,
                                     maxLines = 6,
+                                    enabled = !isClosed,
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                AppButton(
-                                    label = if (isSavingNotes) "Guardando..." else "Guardar notas",
-                                    onPressed = {
-                                        scope.launch {
-                                            isSavingNotes = true
-                                            try {
-                                                techRepository.saveTechnicianNotes(currentOrder.id, notes)
-                                                toastState.showSuccess("Notas guardadas")
-                                            } catch (e: Exception) {
-                                                toastState.showError("Error: ${e.message}")
-                                            } finally {
-                                                isSavingNotes = false
+                                if (!isClosed) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    AppButton(
+                                        label = if (isSavingNotes) "Guardando..." else "Guardar notas",
+                                        onPressed = {
+                                            scope.launch {
+                                                isSavingNotes = true
+                                                try {
+                                                    techRepository.saveTechnicianNotes(currentOrder.id, notes)
+                                                    toastState.showSuccess("Notas guardadas")
+                                                } catch (e: Exception) {
+                                                    toastState.showError("Error: ${e.message}")
+                                                } finally {
+                                                    isSavingNotes = false
+                                                }
                                             }
-                                        }
-                                    },
-                                    isLoading = isSavingNotes,
-                                    isFullWidth = true,
-                                )
+                                        },
+                                        isLoading = isSavingNotes,
+                                        isFullWidth = true,
+                                    )
+                                }
                             }
                         }
 
@@ -259,18 +259,20 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                AppButton(
-                                    label = "Adjuntar Foto / Evidencia",
-                                    icon = AppIcons.Camera,
-                                    onPressed = { showPhotoPickerModal = true },
-                                    variant = AppButtonVariant.OUTLINE,
-                                    isFullWidth = true,
-                                )
+                                if (!isClosed) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    AppButton(
+                                        label = "Adjuntar Foto / Evidencia",
+                                        icon = AppIcons.Camera,
+                                        onPressed = { showPhotoPickerModal = true },
+                                        variant = AppButtonVariant.OUTLINE,
+                                        isFullWidth = true,
+                                    )
+                                }
                             }
                         }
 
-                        if (showPhotoPickerModal) {
+                        if (showPhotoPickerModal && !isClosed) {
                             com.datasys.cooltrack.ui.components.AppConfirmDialog(
                                 title = "Subir Evidencia Fotográfica",
                                 message = "Selecciona o toma una fotografía del equipo o trabajo realizado.",
@@ -339,18 +341,20 @@ data class TechnicianJobDetailScreen(val orderId: String) : Screen {
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                AppButton(
-                                    label = if (hasSignatureSaved) "Volver a Firmar" else "Capturar Firma Digital",
-                                    icon = AppIcons.Signature,
-                                    onPressed = { showSignatureModal = true },
-                                    variant = if (hasSignatureSaved) AppButtonVariant.OUTLINE else AppButtonVariant.PRIMARY,
-                                    isFullWidth = true,
-                                )
+                                if (!isClosed) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    AppButton(
+                                        label = if (hasSignatureSaved) "Volver a Firmar" else "Capturar Firma Digital",
+                                        icon = AppIcons.Signature,
+                                        onPressed = { showSignatureModal = true },
+                                        variant = if (hasSignatureSaved) AppButtonVariant.OUTLINE else AppButtonVariant.PRIMARY,
+                                        isFullWidth = true,
+                                    )
+                                }
                             }
                         }
 
-                        if (showSignatureModal) {
+                        if (showSignatureModal && !isClosed) {
                             com.datasys.cooltrack.ui.components.AppModal(
                                 title = "Firma de Conformidad del Cliente",
                                 onDismissRequest = { showSignatureModal = false },

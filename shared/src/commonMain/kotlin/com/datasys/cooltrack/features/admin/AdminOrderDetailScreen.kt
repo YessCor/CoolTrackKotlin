@@ -140,7 +140,12 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                         newStatus.value,
                         if (technicianId != null) "Técnico asignado" else "Estado actualizado por Admin",
                     )
-                    scope.launch { syncService.syncAll() }
+                    val syncResult = syncService.syncAll()
+                    if (!syncResult.success) {
+                        toastState.showError("Error al guardar: ${syncResult.error ?: "desconocido"}")
+                        loadOrder()
+                        return@launch
+                    }
 
                     // Notificar al cliente (+ alerta si la prioridad es alta)
                     order?.clientId?.let { clientId ->
@@ -186,11 +191,7 @@ class AdminOrderDetailScreen(private val orderId: String) : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(imageVector = AppIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                     actions = {
                         val current = order
                         if (current != null) {

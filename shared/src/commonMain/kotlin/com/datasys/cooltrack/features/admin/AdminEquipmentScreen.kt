@@ -60,7 +60,8 @@ class AdminEquipmentScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Equipos") }) },
+                    expandedHeight = 44.dp,title = { Text("Equipos") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { navigator.push(AdminEquipmentNewScreen()) }) {
                     Icon(imageVector = AppIcons.Add, contentDescription = "Nuevo equipo")

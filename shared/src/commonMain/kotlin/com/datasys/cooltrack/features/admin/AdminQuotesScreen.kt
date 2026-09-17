@@ -69,7 +69,8 @@ class AdminQuotesScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Cotizaciones") }) },
+                    expandedHeight = 44.dp,title = { Text("Cotizaciones") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 val list = quotes

@@ -213,7 +213,8 @@ class AdminQuoteNewScreen(
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Nueva Cotización") }) },
+                    expandedHeight = 44.dp,title = { Text("Nueva Cotización") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(

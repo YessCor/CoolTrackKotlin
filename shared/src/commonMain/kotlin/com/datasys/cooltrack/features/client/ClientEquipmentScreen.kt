@@ -54,8 +54,9 @@ class ClientEquipmentScreen : Screen {
             topBar = { 
                 AppTopBar(
                     expandedHeight = 44.dp,
-                    title = { Text("Mis Equipos") }
-                ) 
+                    title = { Text("Mis Equipos") },
+                    navigationIcon = { ClientHomeNavigationIcon(navigator) },
+                )
             },
         ) { padding ->
             if (isLoading) {

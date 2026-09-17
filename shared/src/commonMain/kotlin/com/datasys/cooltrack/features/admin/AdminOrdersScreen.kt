@@ -70,6 +70,7 @@ class AdminOrdersScreen : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Órdenes de Servicio") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                     actions = {
                         // El original deja el filtro sin implementar
                         // (comentario `// Filter`); se preserva igual acá.

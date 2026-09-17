@@ -1,17 +1,14 @@
 package com.datasys.cooltrack.features.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,11 +40,9 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
-import com.datasys.cooltrack.models.Client
-import com.datasys.cooltrack.models.Equipment
+import com.datasys.cooltrack.models.User
 import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppButton
-import com.datasys.cooltrack.ui.components.AppCard
 import com.datasys.cooltrack.ui.components.AppIcons
 import com.datasys.cooltrack.ui.components.AppInput
 import com.datasys.cooltrack.ui.components.AppToastHost
@@ -57,12 +51,11 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
- * Equivalente a admin_client_detail_screen.dart. `_loadClient()` cargaba el
- * cliente y llenaba los `TextEditingController`; acá el mismo `LaunchedEffect`
- * llena directamente el estado local (`name`, `email`, etc.) que alimenta a
- * `AppInput`.
+ * Detalle/edición de técnico. [AdminRepository] no tiene `getTechnicianById`,
+ * así que se busca dentro de [AdminRepository.getAllTechnicians] por id, igual
+ * que hacían las pantallas de lista original antes de tener detalle propio.
  */
-class AdminClientDetailScreen(private val clientId: String) : Screen {
+class AdminTechnicianDetailScreen(private val technicianId: String) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -70,8 +63,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
         val toastState = rememberAppToastState()
         val adminRepository: AdminRepository = koinInject()
 
-        var client by remember { mutableStateOf<Client?>(null) }
-        var equipment by remember { mutableStateOf<List<Equipment>?>(null) }
+        var technician by remember { mutableStateOf<User?>(null) }
         var isLoading by remember { mutableStateOf(true) }
         var isEditing by remember { mutableStateOf(false) }
         var isSaving by remember { mutableStateOf(false) }
@@ -81,39 +73,26 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var phone by remember { mutableStateOf("") }
-        var address by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
         var confirmPassword by remember { mutableStateOf("") }
         var nameError by remember { mutableStateOf<String?>(null) }
         var passwordError by remember { mutableStateOf<String?>(null) }
 
-        suspend fun loadClient() {
+        suspend fun loadTechnician() {
             isLoading = true
-            val loaded = adminRepository.getClientById(clientId)
+            val loaded = adminRepository.getAllTechnicians().find { it.id == technicianId }
             if (loaded != null) {
-                client = loaded
+                technician = loaded
                 name = loaded.name
                 email = loaded.email
                 phone = loaded.phone ?: ""
-                address = loaded.address ?: ""
                 password = ""
                 confirmPassword = ""
             }
             isLoading = false
         }
 
-        suspend fun loadEquipment() {
-            equipment = try {
-                adminRepository.getAllEquipment(clientId)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        }
-
-        LaunchedEffect(clientId) {
-            loadClient()
-            loadEquipment()
-        }
+        LaunchedEffect(technicianId) { loadTechnician() }
 
         fun save() {
             nameError = if (name.trim().isEmpty()) "Requerido" else null
@@ -128,17 +107,16 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             scope.launch {
                 isSaving = true
                 try {
-                    adminRepository.updateClientWithAuth(
-                        id = clientId,
+                    adminRepository.updateTechnicianWithAuth(
+                        id = technicianId,
                         name = name.trim(),
                         email = email.trim().ifEmpty { null },
                         password = password.ifEmpty { null },
                         phone = phone.trim().ifEmpty { null },
-                        address = address.trim().ifEmpty { null },
                     )
-                    toastState.showSuccess("Cliente actualizado")
+                    toastState.showSuccess("Técnico actualizado")
                     isEditing = false
-                    loadClient()
+                    loadTechnician()
                 } catch (e: Exception) {
                     toastState.showError("Error: ${e.message}")
                 } finally {
@@ -151,8 +129,8 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             scope.launch {
                 isDeleting = true
                 try {
-                    adminRepository.deleteUser(clientId)
-                    toastState.showSuccess("Cliente eliminado")
+                    adminRepository.deleteUser(technicianId)
+                    toastState.showSuccess("Técnico eliminado")
                     navigator.pop()
                 } catch (e: Exception) {
                     toastState.showError("Error: ${e.message}")
@@ -166,8 +144,8 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
         if (showDeleteConfirm) {
             AlertDialog(
                 onDismissRequest = { if (!isDeleting) showDeleteConfirm = false },
-                title = { Text("Eliminar cliente") },
-                text = { Text("¿Seguro que deseas eliminar a ${client?.name ?: "este cliente"}? Esta acción no se puede deshacer.") },
+                title = { Text("Eliminar técnico") },
+                text = { Text("¿Seguro que deseas eliminar a ${technician?.name ?: "este técnico"}? Esta acción no se puede deshacer.") },
                 confirmButton = {
                     TextButton(onClick = ::delete, enabled = !isDeleting) { Text("Eliminar") }
                 },
@@ -181,7 +159,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             topBar = {
                 AppTopBar(
                     expandedHeight = 44.dp,
-                    title = { Text("Detalle del Cliente") },
+                    title = { Text("Detalle del Técnico") },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = AppColors.Primary,
                         titleContentColor = Color.White,
@@ -191,7 +169,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                     navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                     actions = {
                         IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(imageVector = AppIcons.Delete, contentDescription = "Eliminar cliente")
+                            Icon(imageVector = AppIcons.Delete, contentDescription = "Eliminar técnico")
                         }
                         IconButton(onClick = { isEditing = !isEditing }) {
                             Icon(
@@ -204,16 +182,16 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
             },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
-            if (isLoading && client == null) {
+            if (isLoading && technician == null) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
                 return@Scaffold
             }
-            val current = client
+            val current = technician
             if (current == null) {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                    Text("Cliente no encontrado")
+                    Text("Técnico no encontrado")
                 }
                 return@Scaffold
             }
@@ -225,7 +203,6 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
-                // Header con gradiente (equivalente a LinearGradient(primary, secondary))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -255,7 +232,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Información del Cliente", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Información del Técnico", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(16.dp))
 
                 AppInput(
@@ -284,15 +261,6 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                     keyboardType = KeyboardType.Phone,
                     enabled = isEditing,
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                AppInput(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = "Dirección",
-                    prefixIcon = AppIcons.Location,
-                    maxLines = 2,
-                    enabled = isEditing,
-                )
 
                 if (isEditing) {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -314,9 +282,7 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                         obscureText = true,
                         enabled = isEditing,
                     )
-                }
 
-                if (isEditing) {
                     Spacer(modifier = Modifier.height(24.dp))
                     AppButton(
                         label = "Guardar Cambios",
@@ -324,60 +290,6 @@ class AdminClientDetailScreen(private val clientId: String) : Screen {
                         isLoading = isSaving,
                         isFullWidth = true,
                     )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text("Equipos", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    TextButton(
-                        onClick = { navigator.push(AdminEquipmentNewScreen(clientId = clientId)) },
-                    ) { Text("+ Agregar") }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val equipmentList = equipment
-                when {
-                    equipmentList == null -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                    equipmentList.isEmpty() -> Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(AppColors.SurfaceVariant, RoundedCornerShape(12.dp))
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center,
-                    ) { Text("No hay equipos registrados") }
-                    else -> Column {
-                        equipmentList.forEach { eq ->
-                            AppCard(
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                onTap = { navigator.push(AdminEquipmentDetailScreen(eq.id)) },
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .background(AppColors.Secondary.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Icon(imageVector = AppIcons.Equipment, contentDescription = null, tint = AppColors.Secondary)
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(eq.name, fontWeight = FontWeight.SemiBold)
-                                        Text(eq.typeLabel, color = AppColors.TextMuted, fontSize = 13.sp)
-                                    }
-                                    Icon(imageVector = AppIcons.ChevronRight, contentDescription = null, tint = AppColors.TextMuted)
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }

@@ -78,7 +78,8 @@ class AdminClientsScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Clientes") }) },
+                    expandedHeight = 44.dp,title = { Text("Clientes") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when {

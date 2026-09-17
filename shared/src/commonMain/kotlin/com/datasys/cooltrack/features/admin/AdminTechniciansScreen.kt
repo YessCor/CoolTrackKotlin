@@ -60,7 +60,8 @@ class AdminTechniciansScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Técnicos") }) },
+                    expandedHeight = 44.dp,title = { Text("Técnicos") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 val list = technicians
@@ -79,7 +80,7 @@ class AdminTechniciansScreen : Screen {
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(list) { tech ->
-                            AppCard {
+                            AppCard(onTap = { navigator.push(AdminTechnicianDetailScreen(tech.id)) }) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,

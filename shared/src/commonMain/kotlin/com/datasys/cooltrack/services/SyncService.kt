@@ -54,20 +54,39 @@ class SyncService(
         return try {
             val queue = offlineRepo.getSyncQueue()
             var syncedCount = 0
+            var itemError: String? = null
 
             for ((rowId, item) in queue) {
-                val handled = runCatching { processSyncItem(item) }.getOrDefault(false)
+                val result = runCatching { processSyncItem(item) }
+                val handled = result.getOrDefault(false)
+                val exception = result.exceptionOrNull()
                 if (handled) {
                     offlineRepo.removeSyncItem(rowId)
                     syncedCount++
+                } else if (exception != null) {
+                    // Error real (red, permisos, respuesta de secure-db, etc.): se
+                    // reporta y se corta, dejando el ítem en cola para reintentar.
+                    itemError = exception.message
+                    break
                 } else {
-                    break // igual que el original: corta ante el primer error
+                    // processSyncItem devolvió `false` sin lanzar excepción: el ítem
+                    // está mal formado (campos faltantes/acción desconocida) y NUNCA
+                    // va a poder procesarse. Antes esto cortaba el loop entero en
+                    // silencio y bloqueaba para siempre todo lo encolado después —
+                    // ej. una orden vieja atascada impedía que se sincronizara una
+                    // asignación de técnico nueva. Se descarta y se sigue.
+                    offlineRepo.removeSyncItem(rowId)
                 }
             }
 
             offlineRepo.setLastSyncTime(Clock.System.now())
-            _status.value = SyncStatus.SUCCESS
-            SyncResult(success = true, itemsSynced = syncedCount)
+            if (itemError != null) {
+                _status.value = SyncStatus.ERROR
+                SyncResult(success = false, itemsSynced = syncedCount, error = itemError)
+            } else {
+                _status.value = SyncStatus.SUCCESS
+                SyncResult(success = true, itemsSynced = syncedCount)
+            }
         } catch (e: Exception) {
             _status.value = SyncStatus.ERROR
             SyncResult(success = false, error = e.message)

@@ -105,3 +105,18 @@ suspend fun SupabaseClient.secureDelete(
     }
     callSecureDb(payload)
 }
+
+suspend inline fun <reified T> SupabaseClient.secureOp(
+    table: String = "users",
+    op: String,
+    values: JsonObject? = null,
+    match: Map<String, JsonElement>? = null,
+): T {
+    val payload = buildJsonObject {
+        put("table", table)
+        put("op", op)
+        values?.let { put("values", it) }
+        match?.let { put("match", JsonObject(it)) }
+    }
+    return secureDbJson.decodeFromJsonElement(callSecureDb(payload))
+}

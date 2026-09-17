@@ -51,8 +51,11 @@ class AdminClientNewScreen : Screen {
         var email by remember { mutableStateOf("") }
         var phone by remember { mutableStateOf("") }
         var address by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var confirmPassword by remember { mutableStateOf("") }
         var nameError by remember { mutableStateOf<String?>(null) }
         var emailError by remember { mutableStateOf<String?>(null) }
+        var passwordError by remember { mutableStateOf<String?>(null) }
         var isLoading by remember { mutableStateOf(false) }
 
         fun validate(): Boolean {
@@ -62,7 +65,13 @@ class AdminClientNewScreen : Screen {
                 !email.contains("@") -> "Ingrese un correo válido"
                 else -> null
             }
-            return nameError == null && emailError == null
+            passwordError = when {
+                password.trim().isEmpty() -> "Ingrese la contraseña"
+                password.trim().length < 6 -> "Mínimo 6 caracteres"
+                password != confirmPassword -> "Las contraseñas no coinciden"
+                else -> null
+            }
+            return nameError == null && emailError == null && passwordError == null
         }
 
         fun submit() {
@@ -73,6 +82,7 @@ class AdminClientNewScreen : Screen {
                     adminRepository.createClient(
                         name = name.trim(),
                         email = email.trim(),
+                        password = password.trim(),
                         phone = phone.trim(),
                         address = address.trim(),
                     )
@@ -88,7 +98,8 @@ class AdminClientNewScreen : Screen {
 
         Scaffold(
             topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Nuevo Cliente") }) },
+                    expandedHeight = 44.dp,title = { Text("Nuevo Cliente") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) },
             snackbarHost = { AppToastHost(toastState) },
         ) { padding ->
             Column(
@@ -113,6 +124,21 @@ class AdminClientNewScreen : Screen {
                     prefixIcon = AppIcons.Email,
                     keyboardType = KeyboardType.Email,
                     errorText = emailError,
+                )
+                AppInput(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Contraseña *",
+                    obscureText = true,
+                    keyboardType = KeyboardType.Password,
+                    errorText = passwordError,
+                )
+                AppInput(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = "Confirmar Contraseña *",
+                    obscureText = true,
+                    keyboardType = KeyboardType.Password,
                 )
                 AppInput(
                     value = phone,

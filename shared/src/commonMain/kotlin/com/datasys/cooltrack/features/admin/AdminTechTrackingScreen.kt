@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.models.TechnicianLocation
 import com.datasys.cooltrack.ui.components.AppTopBar
@@ -70,6 +72,7 @@ import org.koin.compose.koinInject
 class AdminTechTrackingScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val supabase: SupabaseClient = koinInject()
         val adminRepository: AdminRepository = koinInject()
 
@@ -115,7 +118,8 @@ class AdminTechTrackingScreen : Screen {
         }
 
         Scaffold(topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Rastreo de Técnicos") }) }) { padding ->
+                    expandedHeight = 44.dp,title = { Text("Rastreo de Técnicos") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) }) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 if (latestLocations.isEmpty()) {
                     AppEmptyState(

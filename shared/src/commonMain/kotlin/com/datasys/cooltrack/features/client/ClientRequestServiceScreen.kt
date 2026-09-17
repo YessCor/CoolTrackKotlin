@@ -58,11 +58,7 @@ class ClientRequestServiceScreen : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Solicitar Servicio") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    }
+                    navigationIcon = { ClientHomeNavigationIcon(navigator) }
                 )
             },
             snackbarHost = { AppToastHost(toastState) }

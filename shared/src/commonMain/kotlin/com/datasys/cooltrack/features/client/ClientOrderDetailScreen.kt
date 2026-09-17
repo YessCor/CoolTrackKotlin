@@ -103,11 +103,7 @@ data class ClientOrderDetailScreen(val orderId: String) : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Detalle de Orden") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
+                    navigationIcon = { ClientHomeNavigationIcon(navigator) },
                 )
             },
             snackbarHost = { AppToastHost(toastState) },

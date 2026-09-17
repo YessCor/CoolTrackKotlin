@@ -67,8 +67,12 @@ class AdminCreateTechnicianScreen : Screen {
         var email by remember { mutableStateOf("") }
         var phone by remember { mutableStateOf("") }
 
+        var password by remember { mutableStateOf("") }
+        var confirmPassword by remember { mutableStateOf("") }
+
         var nameError by remember { mutableStateOf<String?>(null) }
         var emailError by remember { mutableStateOf<String?>(null) }
+        var passwordError by remember { mutableStateOf<String?>(null) }
         var isSaving by remember { mutableStateOf(false) }
 
         fun validate(): Boolean {
@@ -78,7 +82,13 @@ class AdminCreateTechnicianScreen : Screen {
                 !email.contains("@") -> "Email inválido"
                 else -> null
             }
-            return listOf(nameError, emailError).all { it == null }
+            passwordError = when {
+                password.trim().isEmpty() -> "Ingrese la contraseña"
+                password.trim().length < 6 -> "Mínimo 6 caracteres"
+                password != confirmPassword -> "Las contraseñas no coinciden"
+                else -> null
+            }
+            return nameError == null && emailError == null && passwordError == null
         }
 
         fun submit() {
@@ -90,9 +100,10 @@ class AdminCreateTechnicianScreen : Screen {
                     adminRepository.createTechnicianProfile(
                         name = name.trim(),
                         email = email.trim(),
+                        password = password.trim(),
                         phone = phone.trim().ifEmpty { null },
                     )
-                    toastState.showSuccess("Perfil de técnico creado")
+                    toastState.showSuccess("Perfil de técnico creado exitosamente")
                     navigator.pop()
                 } catch (e: Exception) {
                     toastState.showError("Error: ${e.message}")
@@ -111,6 +122,7 @@ class AdminCreateTechnicianScreen : Screen {
                         containerColor = AppColors.Primary,
                         titleContentColor = Color.White,
                     ),
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                 )
             },
             snackbarHost = { AppToastHost(toastState) },
@@ -143,32 +155,29 @@ class AdminCreateTechnicianScreen : Screen {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 AppInput(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Contraseña *",
+                    obscureText = true,
+                    keyboardType = KeyboardType.Password,
+                    errorText = passwordError,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                AppInput(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = "Confirmar Contraseña *",
+                    obscureText = true,
+                    keyboardType = KeyboardType.Password,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                AppInput(
                     value = phone,
                     onValueChange = { phone = it },
                     label = "Teléfono",
                     prefixIcon = AppIcons.Phone,
                     keyboardType = KeyboardType.Phone,
                 )
-
-                Spacer(modifier = Modifier.height(32.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(AppColors.Info.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
-                        .padding(16.dp),
-                ) {
-                    Icon(imageVector = AppIcons.Info, contentDescription = null, tint = AppColors.Info)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        "Esto crea el perfil del técnico. Para que pueda iniciar sesión todavía hace " +
-                            "falta darle de alta una cuenta con este mismo correo (panel de Supabase o " +
-                            "una función server-side) — un cliente Android no puede crear cuentas de otros " +
-                            "usuarios de forma segura.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AppColors.TextSecondary,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(32.dp))
                 AppButton(label = "Crear Técnico", onPressed = ::submit, isLoading = isSaving, isFullWidth = true)

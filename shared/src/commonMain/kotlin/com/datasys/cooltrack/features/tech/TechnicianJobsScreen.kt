@@ -52,6 +52,7 @@ class TechnicianJobsScreen : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Mis Trabajos") },
+                    navigationIcon = { TechnicianHomeNavigationIcon(navigator) },
                     actions = {
                         SyncIndicator()
                     }

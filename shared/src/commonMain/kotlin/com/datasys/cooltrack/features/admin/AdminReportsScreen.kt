@@ -40,6 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.datasys.cooltrack.core.AppColors
 import com.datasys.cooltrack.ui.components.AppTopBar
 import com.datasys.cooltrack.ui.components.AppCard
@@ -59,6 +61,7 @@ import org.koin.compose.koinInject
 class AdminReportsScreen : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val reportsRepository: ReportsRepository = koinInject()
         var data by remember { mutableStateOf<ReportsData?>(null) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -72,7 +75,8 @@ class AdminReportsScreen : Screen {
         }
 
         Scaffold(topBar = { AppTopBar(
-                    expandedHeight = 44.dp,title = { Text("Informes de Rendimiento") }) }) { padding ->
+                    expandedHeight = 44.dp,title = { Text("Informes de Rendimiento") },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) }) }) { padding ->
             val current = data
             when {
                 current == null && errorMessage == null -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {

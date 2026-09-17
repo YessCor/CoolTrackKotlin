@@ -76,11 +76,7 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
                 AppTopBar(
                     expandedHeight = 44.dp,
                     title = { Text("Detalle de Cotización") },
-                    navigationIcon = {
-                        IconButton(onClick = { navigator.pop() }) {
-                            Icon(AppIcons.ArrowBack, contentDescription = "Atrás")
-                        }
-                    },
+                    navigationIcon = { AdminDashboardNavigationIcon(navigator) },
                 )
             },
         ) { padding ->

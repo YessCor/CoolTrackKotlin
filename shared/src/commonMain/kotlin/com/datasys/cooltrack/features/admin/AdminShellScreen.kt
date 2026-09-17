@@ -67,7 +67,7 @@ private enum class AdminTab(
 
 private fun tabIndexFor(screen: Screen): Int = when (screen) {
     is AdminClientsScreen, is AdminClientDetailScreen, is AdminClientNewScreen -> 1
-    is AdminTechniciansScreen, is AdminCreateTechnicianScreen -> 2
+    is AdminTechniciansScreen, is AdminCreateTechnicianScreen, is AdminTechnicianDetailScreen -> 2
     is AdminOrdersScreen -> 3
     is AdminQuotesScreen -> 4
     is NotificationsScreen -> 5

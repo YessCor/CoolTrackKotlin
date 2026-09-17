@@ -49,7 +49,14 @@ const OPEN_TABLES = new Set([
   "media",
 ]);
 
-type Op = "select" | "insert" | "update" | "delete";
+type Op =
+  | "select"
+  | "insert"
+  | "update"
+  | "delete"
+  | "create_user_with_auth"
+  | "update_user_with_auth"
+  | "delete_user_with_auth";
 
 interface RequestBody {
   table: string;
@@ -95,6 +102,92 @@ Deno.serve(async (req) => {
     const { data } = await admin.from("users").select("*").eq("id", callerId).maybeSingle();
     return data;
   }
+
+  // --- Operaciones especiales para creación/edición completa de usuarios ---
+  if (op === "create_user_with_auth" || op === "update_user_with_auth" || op === "delete_user_with_auth") {
+    const me = await callerProfile();
+    if (!me || me.role !== "admin") return json({ error: "Requiere rol admin" }, 403);
+    
+    const v = values as Record<string, any>;
+    if (!v) return json({ error: "Se requiere 'values'" }, 400);
+
+    if (op === "create_user_with_auth") {
+      const { email, password, name, phone, address, role } = v;
+      if (!email || !password) return json({ error: "Email y password son obligatorios" }, 400);
+      
+      const { data: authData, error: authError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+      if (authError) return json({ error: authError.message }, 400);
+      
+      const newUserId = authData.user.id;
+      const { data: profile, error: dbError } = await admin.from("users").insert({
+        id: newUserId,
+        email,
+        name,
+        phone,
+        address,
+        role: role ?? "client",
+      }).select().single();
+      
+      if (dbError) {
+        await admin.auth.admin.deleteUser(newUserId);
+        return json({ error: dbError.message }, 400);
+      }
+      return json({ data: profile });
+    }
+
+    if (op === "update_user_with_auth") {
+      const { id, email, password, name, phone, address, role, is_active } = v;
+      if (!id) return json({ error: "Se requiere el 'id' del usuario" }, 400);
+
+      // Actualizar en Auth (solo si enviaron password o email)
+      const authUpdates: Record<string, any> = {};
+      if (email) authUpdates.email = email;
+      if (password) authUpdates.password = password;
+      
+      if (Object.keys(authUpdates).length > 0) {
+        const { error: authError } = await admin.auth.admin.updateUserById(id, authUpdates);
+        if (authError) return json({ error: authError.message }, 400);
+      }
+
+      // Actualizar en tabla publica
+      const dbUpdates: Record<string, any> = {};
+      if (email !== undefined) dbUpdates.email = email;
+      if (name !== undefined) dbUpdates.name = name;
+      if (phone !== undefined) dbUpdates.phone = phone;
+      if (address !== undefined) dbUpdates.address = address;
+      if (role !== undefined) dbUpdates.role = role;
+      if (is_active !== undefined) dbUpdates.is_active = is_active;
+
+      const { data: profile, error: dbError } = await admin.from("users")
+        .update(dbUpdates).eq("id", id).select().single();
+      
+      if (dbError) return json({ error: dbError.message }, 400);
+      return json({ data: profile });
+    }
+
+    if (op === "delete_user_with_auth") {
+      const { id } = v;
+      if (!id) return json({ error: "Se requiere el 'id' del usuario" }, 400);
+      if (id === callerId) return json({ error: "No puedes eliminar tu propio usuario" }, 400);
+
+      const { error: dbError } = await admin.from("users").delete().eq("id", id);
+      if (dbError) return json({ error: dbError.message }, 400);
+
+      // El usuario puede no tener cuenta de Auth (creado antes del flujo
+      // create_user_with_auth); ignoramos ese caso puntual.
+      const { error: authError } = await admin.auth.admin.deleteUser(id);
+      if (authError && !authError.message.toLowerCase().includes("not found")) {
+        return json({ error: authError.message }, 400);
+      }
+
+      return json({ data: { id } });
+    }
+  }
+  // ------------------------------------------------------------------------
 
   if (table === "users") {
     if (op === "select") {
