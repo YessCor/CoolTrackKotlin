@@ -149,7 +149,7 @@ data class AdminQuoteDetailScreen(val quoteId: String) : Screen {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 SummaryRow("Subtotal", q.formattedSubtotal)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                SummaryRow("IVA (${String.format("%.0f", q.taxRate * 100)}%)", q.formattedTotal)
+                                SummaryRow("IVA (${(kotlin.math.round(q.taxRate * 100)).toInt()}%)", q.formattedTotal)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                                 SummaryRow("Total", q.formattedTotal, isBold = true)
                             }
@@ -205,13 +205,13 @@ private fun QuoteItemRow(item: QuoteItem) {
         Column(modifier = Modifier.weight(1f)) {
             Text(item.description, fontWeight = FontWeight.Medium, fontSize = 15.sp)
             Text(
-                "${item.quantity} x $${String.format("%.2f", item.unitPrice)}",
+                "${item.quantity} x $${(kotlin.math.round(item.unitPrice * 100) / 100.0)}",
                 fontSize = 13.sp,
                 color = AppColors.TextMuted,
             )
         }
         Text(
-            "$${String.format("%.2f", item.total)}",
+            "$${(kotlin.math.round(item.total * 100) / 100.0)}",
             fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
         )

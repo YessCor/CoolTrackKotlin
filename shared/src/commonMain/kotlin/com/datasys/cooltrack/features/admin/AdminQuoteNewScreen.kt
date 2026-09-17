@@ -95,7 +95,7 @@ private class QuoteItemRowState {
     var quantity by mutableStateOf("1")
     var unitPrice by mutableStateOf("0")
 
-    val total: Double get() = (quantity.toDoubleOrNull() ?: 0.0) * (unitPrice.toDoubleOrNull() ?: 0.0)
+    val total: Double get() = (quantity.replace(",", ".").toDoubleOrNull() ?: 0.0) * (unitPrice.replace(",", ".").toDoubleOrNull() ?: 0.0)
 }
 
 /**
@@ -183,8 +183,8 @@ class AdminQuoteNewScreen(
                             put("quote_id", quoteId)
                             item.catalogItemId?.let { put("catalog_item_id", it) }
                             put("description", item.description)
-                            put("quantity", item.quantity.toDoubleOrNull() ?: 1.0)
-                            put("unit_price", item.unitPrice.toDoubleOrNull() ?: 0.0)
+                            put("quantity", item.quantity.replace(",", ".").toDoubleOrNull() ?: 1.0)
+                            put("unit_price", item.unitPrice.replace(",", ".").toDoubleOrNull() ?: 0.0)
                             put("total", item.total)
                         }
                         supabase.secureInsert<JsonObject>("quote_items", itemJson)

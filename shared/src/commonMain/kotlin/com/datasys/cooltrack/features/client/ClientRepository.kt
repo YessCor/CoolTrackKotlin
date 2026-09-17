@@ -169,6 +169,20 @@ class ClientRepository(private val supabase: SupabaseClient) {
             buildJsonObject { put("status", status.value) },
             match = mapOf("id" to JsonPrimitive(quoteId)),
         )
+
+        // Si se aprueba la cotización, actualizar el total_amount de la orden vinculada
+        if (status == QuoteStatus.APPROVED) {
+            val quote = getQuoteById(quoteId)
+            val orderId = quote?.orderId
+            val total = quote?.total
+            if (orderId != null && total != null) {
+                supabase.secureUpdate(
+                    "service_orders",
+                    buildJsonObject { put("total_amount", total) },
+                    match = mapOf("id" to JsonPrimitive(orderId))
+                )
+            }
+        }
     }
 
     /** Crear una nueva solicitud de servicio. */
